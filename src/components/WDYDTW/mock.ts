@@ -1,6 +1,28 @@
 export const wdydtwData = [
   {
     dates:{
+      start: "2025-06-23",
+      end: "2025-07-13"
+    },
+    tasks: [
+      {
+        category: 'PERSONAL',
+        title: 'Family Reunion / Vacation',
+        updates: [
+          'Cape Cod, MA'
+        ]
+      },
+      {
+        category: 'PERSONAL',
+        title: 'Moving',
+        updates: [
+          'Moved storage unit from Colorado Springs to Indiana in preparation for graduate school.',
+        ]
+      }
+    ]
+  },
+  {
+    dates:{
       start: "2025-06-16",
       end: "2025-06-22"
     },

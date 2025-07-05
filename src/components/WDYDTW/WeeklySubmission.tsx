@@ -77,7 +77,15 @@ const WeeklySubmission = ({
         <div className="flex flex-col gap-2">
           {data.tasks.map((task, i) => (
             <div key={i} className="flex flex-col pl-2">
-              <span className="font-medium">{`${task.category} - ${task.title}`}</span>
+              {task.category && task.title && (
+                <span className="font-medium">{`${task.category} - ${task.title}`}</span>
+              )}
+              {task.category && !task.title && (
+                <span className="font-medium">{`${task.category}`}</span>
+              )}
+              {!task.category && task.title && (
+                <span className="font-medium">{`${task.title}`}</span>
+              )}
               <ul className="list-disc leading-none pl-6" style={{ listStyleType: 'disc' }}>
                 {task.updates.map((update, idx) => (
                   <li key={idx} className="">
