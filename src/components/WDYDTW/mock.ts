@@ -7,6 +7,11 @@ export const wdydtwData = [
     tasks: [
       {
         category: 'PERSONAL',
+        title: 'Became an Uncle!',
+        updates: [],
+      },
+      {
+        category: 'PERSONAL',
         title: 'Family Reunion / Vacation',
         updates: [
           'Cape Cod, MA'
