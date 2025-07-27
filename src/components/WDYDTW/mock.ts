@@ -1,8 +1,24 @@
 export const wdydtwData = [
   {
     dates:{
+      start: "2025-07-21",
+      end: "2025-07-27"
+    },
+    tasks: [
+      {
+        category: 'Writing [Substack]',
+        title: 'Software, Service, and the State',
+        updates: [
+          'Wrote & published a book review/summary for "The Technological Republic: Hard Power, Soft Belief, and the Future of the West"'
+        ],
+        link: 'https://reedturgeon.substack.com/p/software-service-and-the-state',
+      },
+    ]
+  },
+  {
+    dates:{
       start: "2025-06-23",
-      end: "2025-07-13"
+      end: "2025-07-20"
     },
     tasks: [
       {
