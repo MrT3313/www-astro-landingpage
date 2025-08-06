@@ -201,7 +201,7 @@ export const Layout: React.FC<LayoutProps> = ({ debug = true, children }) => {
             </div> 
         </LayoutCorner>
 
-        <WDYDTW data={wdydtwData} today={today} />
+        {/* <WDYDTW data={wdydtwData} today={today} /> */}
       
       {children}
     </div>
