@@ -7,29 +7,29 @@ import { MdAlternateEmail } from "react-icons/md"
 import { BsSubstack } from "react-icons/bs";
 
 export const menuItems: MenuItemType[] = [
-    { 
-      type: "Project",
-      isLive: true,
-      label: "🧠 Substack",
-      Icon: <BsSubstack size={24} />,
-      backgroundColor: 'white',
-      iconColor: 'orange',
-      href: "https://reedturgeon.substack.com/",
-      segments: [13],
-    },
-    { 
-      type: "Project",
-      isLive: false,
-      label: "🚧⏳ Hourglass",
-      href: "https://github.com/Hourglass-Attention-Tracker",
-      segments: [16],
-    },
-    { 
-      type: "Personal",
-      isLive: false,
-      label: "🚧💰 FOLLYo",
-      segments: [17],
-    },
+    // { 
+    //   type: "Project",
+    //   isLive: true,
+    //   label: "🧠 Substack",
+    //   Icon: <BsSubstack size={24} />,
+    //   backgroundColor: 'white',
+    //   iconColor: 'orange',
+    //   href: "https://reedturgeon.substack.com/",
+    //   segments: [13],
+    // },
+    // { 
+    //   type: "Project",
+    //   isLive: false,
+    //   label: "🚧⏳ Hourglass",
+    //   href: "https://github.com/Hourglass-Attention-Tracker",
+    //   segments: [16],
+    // },
+    // { 
+    //   type: "Personal",
+    //   isLive: false,
+    //   label: "🚧💰 FOLLYo",
+    //   segments: [17],
+    // },
     // { 
     //   type: "Project",
     //   isLive: false,
