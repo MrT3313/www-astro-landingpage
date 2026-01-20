@@ -1,1 +1,0 @@
-export { WDYDTW } from './WDYDTW'
