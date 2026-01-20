@@ -159,8 +159,8 @@ export default function LandingPage() {
   // Calculate terminal bounds
   useEffect(() => {
     if (grid.cols > 0 && grid.rows > 0) {
-      const terminalCols = Math.floor(grid.cols * 0.5); // Smaller - 50% instead of 70%
-      const terminalRows = Math.min(Math.floor(grid.rows * 0.25), 6); // Smaller - 25% instead of 35%
+      const terminalCols = Math.floor(grid.cols * 0.7); // 70% width
+      const terminalRows = Math.min(Math.floor(grid.rows * 0.40), 10); // 35% height, max 10 rows
       
       const startX = Math.floor((grid.cols - terminalCols) / 2);
       const startY = Math.floor((grid.rows - terminalRows) / 2);
@@ -203,7 +203,7 @@ export default function LandingPage() {
     const totalCells = grid.cols * grid.rows;
     const terminalCells = terminalBounds.width * terminalBounds.height;
     const availableCells = totalCells - terminalCells;
-    const numWalls = Math.floor(availableCells * 0.3); // 50% of available cells (excluding terminal)
+    const numWalls = Math.floor(availableCells * 0.5); // 50% of available cells (excluding terminal)
     
     for (let i = 0; i < numWalls; i++) {
       const point = getRandomPoint();
@@ -497,7 +497,7 @@ export default function LandingPage() {
                       fontSize: `clamp(1.5rem, ${terminalBounds.width * cellSize * 0.08}px, 3.5rem)`,
                       textShadow: '0 0 20px rgba(34, 197, 94, 0.3)'
                     }}>
-                  Alex Chen
+                  Reed Turgeon
                 </h1>
                 <p className="text-green-300/80 tracking-wide"
                    style={{ fontSize: `clamp(0.875rem, ${terminalBounds.width * cellSize * 0.025}px, 1.125rem)` }}>
