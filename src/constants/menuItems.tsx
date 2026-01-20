@@ -5,8 +5,20 @@ import { FaGithub, FaLinkedin } from "react-icons/fa"
 import { type MenuItemType } from "../types"
 import { MdAlternateEmail } from "react-icons/md"
 import { BsSubstack } from "react-icons/bs";
+import { ImBooks } from "react-icons/im";
+
 
 export const menuItems: MenuItemType[] = [
+    { 
+      type: "Widget",
+      isLive: true,
+      label: "📚 Stephen King Oeuvre",
+      Icon: <ImBooks size={28} />,
+      backgroundColor: 'white',
+      iconColor: 'purple',
+      href: null,
+      segments: [16],
+    },
     // { 
     //   type: "Project",
     //   isLive: true,

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import cx from 'classnames'
 
 // TYPES
@@ -17,6 +17,7 @@ import { menuItems } from '../../constants/menuItems'
 // COMPONENTS
 import MenuItemCard from './MenuItemCard'
 import ClickConfetti from '../Animations/ClickConfetti'
+import { StephenKingOeuvre } from '../Modals/StephenKingOeuvre/StephenKingOeuvre'
 
 type CircularMenuV2Props = {
     menuItems: MenuItemType[]
@@ -53,6 +54,9 @@ const CircularMenuV2 = ({
     const [showConfetti, setShowConfetti] = useState<boolean>(false)
     const [lastClickTime, setLastClickTime] = useState<number>(0)
     const [clickPosition, setClickPosition] = useState<Point>({ x: 0, y: 0 })
+
+    // STATE > widgets
+    const [activeWidget, setActiveWidget] = useState<MenuItemType | null>(null)
 
     // HOOKS
     const { 
@@ -218,6 +222,7 @@ const CircularMenuV2 = ({
     // METHODS > animations
     const handleClick = useCallback((e: MouseEvent) => {
         if (mouseInMenu || !mouseInViewport) return
+        if (activeWidget !== null) return
         
         const now = Date.now()
         if (now - lastClickTime < 1000) return // 3 second debounce
@@ -225,10 +230,30 @@ const CircularMenuV2 = ({
         setLastClickTime(now)
         setClickPosition({ x: e.clientX, y: e.clientY })
         setShowConfetti(true)
-    }, [mouseInMenu, mouseInViewport, lastClickTime])
+    }, [mouseInMenu, mouseInViewport, lastClickTime, activeWidget])
 
     const handleMenuItemHover = useCallback((isHovering: boolean) => {
         setIsHoveringMenuItem(isHovering)
+    }, [])
+
+    const normalizeLabel = (label: string): string => {
+        return label
+            .replace(/[📚🧠🚧⏳💰🛒📔💬]/g, '')
+            .trim()
+            .toLowerCase()
+            .replace(/\s+/g, '-')
+    }
+
+    const widgetComponents: Record<string, React.ComponentType<{ isOpen: boolean; onClose: () => void }>> = {
+        'stephen-king-oeuvre': StephenKingOeuvre
+    }
+
+    const handleWidgetClick = useCallback((item: MenuItemType) => {
+        setActiveWidget(item)
+    }, [])
+
+    const handleWidgetClose = useCallback(() => {
+        setActiveWidget(null)
     }, [])
 
     useEffect(() => {
@@ -451,6 +476,7 @@ const CircularMenuV2 = ({
                                                 debug={debug}
                                                 interactionModality={isTouchOnly ? 'touch' : 'mouse'}
                                                 onHover={handleMenuItemHover}
+                                                onWidgetClick={handleWidgetClick}
                                             />
                                         </div>
                                     </foreignObject>
@@ -471,12 +497,26 @@ const CircularMenuV2 = ({
                 ))}
             </svg>
 
-            {showConfetti && (
+            {showConfetti && activeWidget === null && (
                 <ClickConfetti
                     position={clickPosition}
                     onAnimationComplete={() => setShowConfetti(false)}
                 />
             )}
+
+            {activeWidget && (() => {
+                const normalizedLabel = normalizeLabel(activeWidget.label)
+                const WidgetComponent = widgetComponents[normalizedLabel]
+                
+                if (!WidgetComponent) return null
+                
+                return (
+                    <WidgetComponent
+                        isOpen={activeWidget !== null}
+                        onClose={handleWidgetClose}
+                    />
+                )
+            })()}
         </div>
     )
 }

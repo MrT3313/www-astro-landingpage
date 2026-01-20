@@ -26,6 +26,7 @@ type MenuItemCardProps = {
     debug?: boolean
     interactionModality: 'touch' | 'mouse'
     onHover?: (isHovering: boolean) => void
+    onWidgetClick?: (item: MenuItemType) => void
 }
 const MenuItemCard = ({ 
     item,
@@ -36,7 +37,8 @@ const MenuItemCard = ({
     syntheticPosition,
     debug = false,
     interactionModality,
-    onHover
+    onHover,
+    onWidgetClick
 }: MenuItemCardProps) => {
     // REFS
     const containerRef = useRef<HTMLDivElement>(null)
@@ -104,8 +106,8 @@ const MenuItemCard = ({
         >
             <div 
                 style={{ 
-                    backgroundColor: item.href ? 'transparent' : (item?.hex ? `#${item.hex}` : 'white'),
-                    color: item.href ? 'inherit' : (item?.hex && 'white'),
+                    backgroundColor: (item.href || item.type === 'Widget') ? 'transparent' : (item?.hex ? `#${item.hex}` : 'white'),
+                    color: (item.href || item.type === 'Widget') ? 'inherit' : (item?.hex && 'white'),
                 }}
                 className={cx(
                     "flex flex-col items-center justify-center",
@@ -114,13 +116,32 @@ const MenuItemCard = ({
                     "transition-all duration-150",
                     "pointer-events-auto",
                     {
-                        "cursor-pointer": item.href,
-                        "shadow-md": !item.href
+                        "cursor-pointer": item.href || item.type === 'Widget',
+                        "shadow-md": !item.href && item.type !== 'Widget'
                     }
                 )}
+                onClick={() => {
+                    if (item.type === 'Widget' && onWidgetClick) {
+                        onWidgetClick(item)
+                    }
+                }}
             >
                 {item.href ? (
                     <Item {...{ item }} />
+                ) : item.type === 'Widget' && item.Icon ? (
+                    <div
+                        style={{
+                            backgroundColor: item.backgroundColor || 'white',
+                            color: item.iconColor || 'black'
+                        }}
+                        className={cx(
+                            "flex items-center gap-2",
+                            "px-2 py-1",
+                            "rounded-md shadow-md"
+                        )}
+                    >
+                        {item.Icon}
+                    </div>
                 ) : (
                     <span className="text-nowrap">
                         {item.label}
