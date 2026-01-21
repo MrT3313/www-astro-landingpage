@@ -17,6 +17,7 @@ export class AStarSearch {
     this.searchSteps = [];
   }
 
+  // h_cost: Estimates distance from current to goal (Manhattan distance for 4-directional grid)
   private heuristic(a: Node, b: Node): number {
     return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
   }
@@ -39,7 +40,11 @@ export class AStarSearch {
     const openSet: Node[] = [start];
     const closedSet = new Set<string>();
     const cameFrom = new Map<string, Node>();
+    
+    // g_cost: Actual distance from start to node
     const gScore = new Map<string, number>();
+    
+    // f_cost: g_cost + h_cost (total estimated cost through node)
     const fScore = new Map<string, number>();
 
     const key = (node: Node): string => `${node.x},${node.y}`;
@@ -48,6 +53,7 @@ export class AStarSearch {
     fScore.set(key(start), this.heuristic(start, end));
 
     while (openSet.length > 0) {
+      // Select node with lowest f_cost
       openSet.sort((a, b) => (fScore.get(key(a)) ?? Infinity) - (fScore.get(key(b)) ?? Infinity));
       const current = openSet.shift()!;
       
@@ -76,6 +82,8 @@ export class AStarSearch {
         if (tentativeGScore < currentGScore) {
           cameFrom.set(key(neighbor), current);
           gScore.set(key(neighbor), tentativeGScore);
+          
+          // f_cost = g_cost + h_cost
           fScore.set(key(neighbor), tentativeGScore + this.heuristic(neighbor, end));
           
           const alreadyInOpen = openSet.some(n => n.x === neighbor.x && n.y === neighbor.y);
