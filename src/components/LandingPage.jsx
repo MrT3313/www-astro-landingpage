@@ -1,5 +1,56 @@
 import React, { useState, useEffect, useRef } from 'react';
 
+// Rotating Title Component
+function RotatingTitle({ cellSize, terminalWidth }) {
+  const titles = [
+    "Senior Full Stack Software Engineer",
+    "Builder",
+    "Explorer"
+  ];
+  
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % titles.length);
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [titles.length]);
+
+  const nextIndex = (currentIndex + 1) % titles.length;
+
+  return (
+    <div className="relative w-full h-full overflow-hidden">
+      {/* Current title - slides down and out */}
+      <p 
+        key={`current-${currentIndex}`}
+        className="text-green-300/80 tracking-wide absolute w-full animate-slideDown"
+        style={{ 
+          fontSize: `clamp(0.875rem, ${terminalWidth * cellSize * 0.025}px, 1.125rem)`,
+          top: 0,
+          left: 0
+        }}
+      >
+        {titles[currentIndex]}
+      </p>
+      
+      {/* Next title - slides down from above */}
+      <p 
+        key={`next-${nextIndex}`}
+        className="text-green-300/80 tracking-wide absolute w-full animate-slideDownIn"
+        style={{ 
+          fontSize: `clamp(0.875rem, ${terminalWidth * cellSize * 0.025}px, 1.125rem)`,
+          top: 0,
+          left: 0
+        }}
+      >
+        {titles[nextIndex]}
+      </p>
+    </div>
+  );
+}
+
 // A* Pathfinding Algorithm
 class PathFinder {
   constructor(grid, walls) {
@@ -461,21 +512,29 @@ export default function LandingPage() {
 
             <div className="flex-1 px-8 py-6 overflow-hidden flex flex-col justify-center">
               <div className="space-y-6">
-                <div className="text-green-500 text-sm opacity-70">$ whoami</div>
-                <h1 className="text-white font-bold tracking-tight leading-tight"
-                    style={{ 
-                      fontSize: `clamp(1.5rem, ${terminalBounds.width * cellSize * 0.08}px, 3.5rem)`,
-                      textShadow: '0 0 20px rgba(34, 197, 94, 0.3)'
-                    }}>
-                  Reed Turgeon
-                </h1>
-                <p className="text-green-300/80 tracking-wide"
-                   style={{ fontSize: `clamp(0.875rem, ${terminalBounds.width * cellSize * 0.025}px, 1.125rem)` }}>
-                  Senior Backend Engineer
-                </p>
+                <div className="space-y-0">
+                  <div className="text-green-500 text-sm opacity-70">$ whoami</div>
+                  <h1 className="text-white font-bold tracking-tight leading-tight"
+                      style={{ 
+                        fontSize: `clamp(1.5rem, ${terminalBounds.width * cellSize * 0.08}px, 3.5rem)`,
+                        textShadow: '0 0 20px rgba(34, 197, 94, 0.3)'
+                      }}>
+                    Reed Turgeon
+                  </h1>
+                </div>
                 
-                <div className="pt-4">
-                  <div className="text-green-500 text-sm opacity-70 mb-4">$ skills</div>
+                <div className="space-y-1">
+                  <div className="text-green-500 text-sm opacity-70">$ reedturgeon --title</div>
+                  <div className="relative overflow-hidden"
+                       style={{ 
+                         height: `clamp(1.25rem, ${terminalBounds.width * cellSize * 0.025}px, 1.625rem)`
+                       }}>
+                    <RotatingTitle cellSize={cellSize} terminalWidth={terminalBounds.width} />
+                  </div>
+                </div>
+                
+                <div className="space-y-1">
+                  <div className="text-green-500 text-sm opacity-70">$ skills</div>
                   <div className="flex flex-wrap gap-3">
                     {['Node.js', 'Python', 'Go', 'AWS', 'Docker', 'Kubernetes'].map((skill) => (
                       <span
@@ -506,6 +565,24 @@ export default function LandingPage() {
         @keyframes wipeOut {
           0% { clip-path: circle(0% at 50% 50%); }
           100% { clip-path: circle(150% at 50% 50%); }
+        }
+        
+        @keyframes slideDown {
+          from { transform: translateY(0); opacity: 1; }
+          to { transform: translateY(100%); opacity: 0; }
+        }
+        
+        @keyframes slideDownIn {
+          from { transform: translateY(-100%); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .animate-slideDown {
+          animation: slideDown 0.5s ease-in-out forwards;
+        }
+        
+        .animate-slideDownIn {
+          animation: slideDownIn 0.5s ease-in-out forwards;
         }
         
         @keyframes searchFade {
