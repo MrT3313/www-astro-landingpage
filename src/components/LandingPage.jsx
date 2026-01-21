@@ -82,7 +82,7 @@ class PathFinder {
   }
 }
 
-export default function LandingPage() {
+export default function LandingPage({ debug = false }) {
   const containerRef = useRef(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [cellSize, setCellSize] = useState(40);
@@ -168,13 +168,13 @@ export default function LandingPage() {
         
         // Start pausing if not already
         if (!isResizing) {
-          console.log('🟠 RESIZE START - Dimensions changed');
+          if (debug) console.log('🟠 RESIZE START - Dimensions changed');
           setIsResizing(true);
         }
         
         // Set timeout to end resize (500ms after last resize event)
         resizeTimeout = setTimeout(() => {
-          console.log('🟠 RESIZE END - Resizing stopped');
+          if (debug) console.log('🟠 RESIZE END - Resizing stopped');
           setIsResizing(false);
           
           // Update dimensions
@@ -258,7 +258,7 @@ export default function LandingPage() {
     if (isResizing) return; // Don't start if resizing
     
     hasStartedRef.current = true;
-    console.log('🔵 SETUP: Generating grid...');
+    if (debug) console.log('🔵 SETUP: Generating grid...');
 
     // Calculate terminal bounds FIRST, synchronously
     let terminalCols = Math.floor(grid.cols * 0.7);
@@ -330,20 +330,24 @@ export default function LandingPage() {
       )
     ).flat()];
     
-    console.log('Grid:', grid.cols, 'x', grid.rows);
-    console.log('Start:', start);
-    console.log('End:', end);
-    console.log('Walls:', newWalls.length, 'random walls +', currentTerminalBounds.width * currentTerminalBounds.height, 'terminal cells =', wallSet.length, 'total walls');
+    if (debug) {
+      console.log('Grid:', grid.cols, 'x', grid.rows);
+      console.log('Start:', start);
+      console.log('End:', end);
+      console.log('Walls:', newWalls.length, 'random walls +', currentTerminalBounds.width * currentTerminalBounds.height, 'terminal cells =', wallSet.length, 'total walls');
+    }
     
     const pathFinder = new PathFinder(grid, wallSet);
     const result = pathFinder.findPath(start, end, grid.cols, grid.rows);
     
-    console.log('Result:', result);
-    console.log('Path length:', result.path.length);
-    console.log('Search steps:', result.searchSteps.length);
+    if (debug) {
+      console.log('Result:', result);
+      console.log('Path length:', result.path.length);
+      console.log('Search steps:', result.searchSteps.length);
+    }
     
     if (result.path.length === 0) {
-      console.log('❌ No path found, retrying...');
+      if (debug) console.log('❌ No path found, retrying...');
       hasStartedRef.current = false;
       setTimeout(() => {
         setPhase('RETRY');
@@ -352,12 +356,12 @@ export default function LandingPage() {
       return;
     }
 
-    console.log('✅ Path found! Search steps:', result.searchSteps.length, 'Path nodes:', result.path.length);
+    if (debug) console.log('✅ Path found! Search steps:', result.searchSteps.length, 'Path nodes:', result.path.length);
     
     allSearchStepsRef.current = result.searchSteps;
     allPathNodesRef.current = result.path;
 
-    console.log('🟢 Immediately changing to SEARCHING phase');
+    if (debug) console.log('🟢 Immediately changing to SEARCHING phase');
     setPhase('SEARCHING');
 
   }, [phase, grid, isResizing]);
@@ -367,10 +371,10 @@ export default function LandingPage() {
     if (phase !== 'SEARCHING') return;
     if (isResizing) return; // Pause during resize
     
-    console.log('📊 SEARCHING - showing node', currentSearchIndex, 'of', allSearchStepsRef.current.length);
+    if (debug) console.log('📊 SEARCHING - showing node', currentSearchIndex, 'of', allSearchStepsRef.current.length);
     
     if (currentSearchIndex >= allSearchStepsRef.current.length) {
-      console.log('🟡 Search complete! Moving to PATH phase');
+      if (debug) console.log('🟡 Search complete! Moving to PATH phase');
       setPhase('PATH');
       return;
     }
@@ -392,10 +396,10 @@ export default function LandingPage() {
     if (phase !== 'PATH') return;
     if (isResizing) return; // Pause during resize
     
-    console.log('📈 PATH - showing node', currentPathIndex, 'of', allPathNodesRef.current.length);
+    if (debug) console.log('📈 PATH - showing node', currentPathIndex, 'of', allPathNodesRef.current.length);
     
     if (currentPathIndex >= allPathNodesRef.current.length) {
-      console.log('🟣 Path complete! Moving to PAUSE');
+      if (debug) console.log('🟣 Path complete! Moving to PAUSE');
       setPhase('PAUSE');
       return;
     }
@@ -417,10 +421,10 @@ export default function LandingPage() {
     if (phase !== 'PAUSE') return;
     if (isResizing) return; // Pause during resize
     
-    console.log('⏸️  PAUSE - Showing complete path for 2 seconds');
+    if (debug) console.log('⏸️  PAUSE - Showing complete path for 2 seconds');
     
     const timer = setTimeout(() => {
-      console.log('🔴 WIPE - Starting transition');
+      if (debug) console.log('🔴 WIPE - Starting transition');
       setPhase('WIPE');
       setIsWiping(true);
     }, 2000);
@@ -433,10 +437,10 @@ export default function LandingPage() {
     if (phase !== 'WIPE') return;
     if (isResizing) return; // Pause during resize
     
-    console.log('💫 WIPE - Clearing screen');
+    if (debug) console.log('💫 WIPE - Clearing screen');
     
     const timer = setTimeout(() => {
-      console.log('🔄 RESTART - Going back to SETUP');
+      if (debug) console.log('🔄 RESTART - Going back to SETUP');
       hasStartedRef.current = false;
       setPhase('SETUP');
     }, 800);
