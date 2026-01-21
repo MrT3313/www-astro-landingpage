@@ -1,88 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import MockTerminal from './MockTerminal.jsx';
+import { AStarSearch } from '../algorithms/search/index.js';
 
-// A* Pathfinding Algorithm
-class PathFinder {
-  constructor(grid, walls) {
-    this.grid = grid;
-    this.walls = new Set(walls.map(([x, y]) => `${x},${y}`));
-    this.searchSteps = [];
-  }
-
-  heuristic(a, b) {
-    return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
-  }
-
-  getNeighbors(node, cols, rows) {
-    const neighbors = [];
-    const directions = [[0, 1], [1, 0], [0, -1], [-1, 0]];
-    
-    for (const [dx, dy] of directions) {
-      const x = node.x + dx;
-      const y = node.y + dy;
-      if (x >= 0 && x < cols && y >= 0 && y < rows && !this.walls.has(`${x},${y}`)) {
-        neighbors.push({ x, y });
-      }
-    }
-    return neighbors;
-  }
-
-  findPath(start, end, cols, rows) {
-    const openSet = [start];
-    const closedSet = new Set();
-    const cameFrom = new Map();
-    const gScore = new Map();
-    const fScore = new Map();
-
-    const key = (node) => `${node.x},${node.y}`;
-    
-    gScore.set(key(start), 0);
-    fScore.set(key(start), this.heuristic(start, end));
-
-    while (openSet.length > 0) {
-      openSet.sort((a, b) => (fScore.get(key(a)) ?? Infinity) - (fScore.get(key(b)) ?? Infinity));
-      const current = openSet.shift();
-      
-      closedSet.add(key(current));
-      this.searchSteps.push({ x: current.x, y: current.y });
-
-      if (current.x === end.x && current.y === end.y) {
-        const path = [];
-        let temp = current;
-        while (cameFrom.has(key(temp))) {
-          path.unshift(temp);
-          temp = cameFrom.get(key(temp));
-        }
-        path.unshift(start);
-        return { path, searchSteps: this.searchSteps };
-      }
-
-      for (const neighbor of this.getNeighbors(current, cols, rows)) {
-        if (closedSet.has(key(neighbor))) {
-          continue;
-        }
-        
-        const tentativeGScore = (gScore.get(key(current)) ?? Infinity) + 1;
-        const currentGScore = gScore.get(key(neighbor)) ?? Infinity;
-        
-        if (tentativeGScore < currentGScore) {
-          cameFrom.set(key(neighbor), current);
-          gScore.set(key(neighbor), tentativeGScore);
-          fScore.set(key(neighbor), tentativeGScore + this.heuristic(neighbor, end));
-          
-          const alreadyInOpen = openSet.some(n => n.x === neighbor.x && n.y === neighbor.y);
-          
-          if (!alreadyInOpen) {
-            openSet.push(neighbor);
-          }
-        }
-      }
-    }
-    return { path: [], searchSteps: this.searchSteps };
-  }
-}
-
-export default function LandingPage({ debug = false }) {
+export default function LandingPage({ debug = false, searchAlgorithm = AStarSearch }) {
   const containerRef = useRef(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [cellSize, setCellSize] = useState(40);
@@ -337,7 +257,7 @@ export default function LandingPage({ debug = false }) {
       console.log('Walls:', newWalls.length, 'random walls +', currentTerminalBounds.width * currentTerminalBounds.height, 'terminal cells =', wallSet.length, 'total walls');
     }
     
-    const pathFinder = new PathFinder(grid, wallSet);
+    const pathFinder = new searchAlgorithm(grid, wallSet);
     const result = pathFinder.findPath(start, end, grid.cols, grid.rows);
     
     if (debug) {
