@@ -37,21 +37,12 @@ class PathFinder {
     
     gScore.set(key(start), 0);
     fScore.set(key(start), this.heuristic(start, end));
-    
-    console.log('START key:', key(start));
-    console.log('START gScore:', gScore.get(key(start)));
 
     while (openSet.length > 0) {
       openSet.sort((a, b) => (fScore.get(key(a)) ?? Infinity) - (fScore.get(key(b)) ?? Infinity));
       const current = openSet.shift();
       
-      if (this.searchSteps.length <= 3) {
-        console.log('CURRENT node:', current, 'key:', key(current), 'gScore:', gScore.get(key(current)));
-      }
-      
-      // Add to closed set
       closedSet.add(key(current));
-
       this.searchSteps.push({ x: current.x, y: current.y });
 
       if (current.x === end.x && current.y === end.y) {
@@ -66,18 +57,12 @@ class PathFinder {
       }
 
       for (const neighbor of this.getNeighbors(current, cols, rows)) {
-        // Skip if already evaluated
         if (closedSet.has(key(neighbor))) {
-          if (this.searchSteps.length <= 3) console.log('  Neighbor', neighbor, 'SKIPPED - in closedSet');
           continue;
         }
         
         const tentativeGScore = (gScore.get(key(current)) ?? Infinity) + 1;
         const currentGScore = gScore.get(key(neighbor)) ?? Infinity;
-        
-        if (this.searchSteps.length <= 3) {
-          console.log('  Neighbor', neighbor, 'tentative:', tentativeGScore, 'current:', currentGScore);
-        }
         
         if (tentativeGScore < currentGScore) {
           cameFrom.set(key(neighbor), current);
@@ -85,22 +70,11 @@ class PathFinder {
           fScore.set(key(neighbor), tentativeGScore + this.heuristic(neighbor, end));
           
           const alreadyInOpen = openSet.some(n => n.x === neighbor.x && n.y === neighbor.y);
-          if (this.searchSteps.length <= 3) {
-            console.log('    Already in openSet?', alreadyInOpen);
-          }
           
           if (!alreadyInOpen) {
             openSet.push(neighbor);
-            if (this.searchSteps.length <= 3) console.log('    ADDED to openSet!');
           }
         }
-      }
-      
-      // DEBUG: Log neighbors found
-      if (this.searchSteps.length <= 3) {
-        const neighbors = this.getNeighbors(current, cols, rows);
-        console.log('Node', current, 'has', neighbors.length, 'neighbors:', neighbors);
-        console.log('OpenSet size:', openSet.length);
       }
     }
     return { path: [], searchSteps: this.searchSteps };
@@ -159,8 +133,8 @@ export default function LandingPage() {
   // Calculate terminal bounds
   useEffect(() => {
     if (grid.cols > 0 && grid.rows > 0) {
-      const terminalCols = Math.floor(grid.cols * 0.7); // 70% width
-      const terminalRows = Math.min(Math.floor(grid.rows * 0.40), 10); // 35% height, max 10 rows
+      const terminalCols = Math.floor(grid.cols * 0.7);
+      const terminalRows = Math.min(Math.floor(grid.rows * 0.40), 10);
       
       const startX = Math.floor((grid.cols - terminalCols) / 2);
       const startY = Math.floor((grid.rows - terminalRows) / 2);
@@ -179,14 +153,18 @@ export default function LandingPage() {
            y >= terminalBounds.y && y < terminalBounds.y + terminalBounds.height;
   };
 
-  const getRandomPoint = () => {
+  const isWall = (x, y, walls) => {
+    return walls.some(([wx, wy]) => wx === x && wy === y);
+  };
+
+  const getRandomPoint = (walls) => {
     let x, y;
     let attempts = 0;
     do {
       x = Math.floor(Math.random() * grid.cols);
       y = Math.floor(Math.random() * grid.rows);
       attempts++;
-    } while (isInTerminal(x, y) && attempts < 100);
+    } while ((isInTerminal(x, y) || isWall(x, y, walls)) && attempts < 1000);
     return { x, y };
   };
 
@@ -203,17 +181,18 @@ export default function LandingPage() {
     const totalCells = grid.cols * grid.rows;
     const terminalCells = terminalBounds.width * terminalBounds.height;
     const availableCells = totalCells - terminalCells;
-    const numWalls = Math.floor(availableCells * 0.5); // 50% of available cells (excluding terminal)
+    const numWalls = Math.floor(availableCells * 0.35);
     
     for (let i = 0; i < numWalls; i++) {
-      const point = getRandomPoint();
+      const point = getRandomPoint(newWalls);
       newWalls.push([point.x, point.y]);
     }
     
     setDynamicWalls(newWalls);
     
-    const start = getRandomPoint();
-    const end = getRandomPoint();
+    // Get start and end points that are NOT on walls
+    const start = getRandomPoint(newWalls);
+    const end = getRandomPoint(newWalls);
     
     setStartPoint(start);
     setEndPoint(end);
@@ -244,7 +223,6 @@ export default function LandingPage() {
     if (result.path.length === 0) {
       console.log('❌ No path found, retrying...');
       hasStartedRef.current = false;
-      // Force re-run by temporarily changing phase
       setTimeout(() => {
         setPhase('RETRY');
         setTimeout(() => setPhase('SETUP'), 50);
@@ -284,7 +262,7 @@ export default function LandingPage() {
     }, searchSpeed);
     
     return () => clearTimeout(timer);
-  }, [phase, currentSearchIndex]);
+  }, [phase, currentSearchIndex, searchSpeed]);
 
   // PATH - animate path nodes one by one
   useEffect(() => {
@@ -308,7 +286,7 @@ export default function LandingPage() {
     }, pathSpeed);
     
     return () => clearTimeout(timer);
-  }, [phase, currentPathIndex]);
+  }, [phase, currentPathIndex, pathSpeed]);
 
   // PAUSE - show complete result
   useEffect(() => {
@@ -353,14 +331,14 @@ export default function LandingPage() {
               <path 
                 d={`M ${cellSize} 0 L 0 0 0 ${cellSize}`} 
                 fill="none" 
-                stroke="rgba(34, 197, 94, 0.12)" 
+                stroke="rgba(100, 116, 139, 0.4)" 
                 strokeWidth="1"
               />
             </pattern>
           </defs>
           <rect width="100%" height="100%" fill="url(#grid)" />
           
-          {/* Walls */}
+          {/* Walls - Grey with no borders, only background grid visible */}
           {dynamicWalls.map(([x, y], idx) => (
             <rect
               key={`wall-${idx}`}
@@ -368,15 +346,13 @@ export default function LandingPage() {
               y={y * cellSize}
               width={cellSize}
               height={cellSize}
-              fill="rgba(239, 68, 68, 0.4)"
-              stroke="rgba(239, 68, 68, 0.7)"
-              strokeWidth="1.5"
+              fill="rgba(71, 85, 105, 0.65)"
               className="transition-all duration-300"
               style={{ opacity: isWiping ? 0 : 1 }}
             />
           ))}
           
-          {/* Searched nodes */}
+          {/* Searched nodes - with fade animation */}
           {searchedNodes.map((node, idx) => {
             const isStart = startPoint && node.x === startPoint.x && node.y === startPoint.y;
             const isEnd = endPoint && node.x === endPoint.x && node.y === endPoint.y;
@@ -393,8 +369,11 @@ export default function LandingPage() {
                 stroke="rgba(34, 197, 94, 0.6)"
                 strokeWidth="1.5"
                 rx="2"
-                className="transition-all duration-200"
-                style={{ opacity: isWiping ? 0 : 1 }}
+                className="searched-node"
+                style={{ 
+                  opacity: isWiping ? 0 : 1,
+                  animation: 'searchFade 3s ease-out forwards'
+                }}
               />
             );
           })}
@@ -427,38 +406,29 @@ export default function LandingPage() {
             </g>
           )}
           
-          {/* Final path */}
+          {/* Final path - pulsing gold cells */}
           {finalPath.map((node, idx) => {
             const isStart = startPoint && node.x === startPoint.x && node.y === startPoint.y;
             const isEnd = endPoint && node.x === endPoint.x && node.y === endPoint.y;
             if (isStart || isEnd) return null;
             
             return (
-              <g key={`path-${idx}`}>
-                {idx < finalPath.length - 1 && (
-                  <line
-                    x1={node.x * cellSize + cellSize / 2}
-                    y1={node.y * cellSize + cellSize / 2}
-                    x2={finalPath[idx + 1].x * cellSize + cellSize / 2}
-                    y2={finalPath[idx + 1].y * cellSize + cellSize / 2}
-                    stroke="rgba(34, 197, 94, 0.8)"
-                    strokeWidth="4"
-                    strokeLinecap="round"
-                    className="transition-opacity duration-300"
-                    style={{ opacity: isWiping ? 0 : 1 }}
-                  />
-                )}
-                <circle
-                  cx={node.x * cellSize + cellSize / 2}
-                  cy={node.y * cellSize + cellSize / 2}
-                  r={cellSize / 3}
-                  fill="rgba(34, 197, 94, 0.9)"
-                  stroke="rgba(34, 197, 94, 1)"
-                  strokeWidth="2"
-                  className="transition-opacity duration-300"
-                  style={{ opacity: isWiping ? 0 : 1 }}
-                />
-              </g>
+              <rect
+                key={`path-${idx}`}
+                x={node.x * cellSize + cellSize * 0.1}
+                y={node.y * cellSize + cellSize * 0.1}
+                width={cellSize * 0.8}
+                height={cellSize * 0.8}
+                fill="rgba(234, 179, 8, 0.7)"
+                stroke="rgba(250, 204, 21, 1)"
+                strokeWidth="2"
+                rx="2"
+                className="path-node"
+                style={{ 
+                  opacity: isWiping ? 0 : 1,
+                  animation: 'pathPulse 1.5s ease-in-out infinite'
+                }}
+              />
             );
           })}
         </svg>
@@ -489,8 +459,8 @@ export default function LandingPage() {
               </div>
             </div>
 
-            <div className="flex-1 p-6 overflow-hidden flex flex-col justify-center">
-              <div className="space-y-4">
+            <div className="flex-1 px-8 py-6 overflow-hidden flex flex-col justify-center">
+              <div className="space-y-6">
                 <div className="text-green-500 text-sm opacity-70">$ whoami</div>
                 <h1 className="text-white font-bold tracking-tight leading-tight"
                     style={{ 
@@ -504,13 +474,13 @@ export default function LandingPage() {
                   Senior Backend Engineer
                 </p>
                 
-                <div className="pt-2">
-                  <div className="text-green-500 text-sm opacity-70 mb-3">$ skills</div>
-                  <div className="flex flex-wrap gap-2">
+                <div className="pt-4">
+                  <div className="text-green-500 text-sm opacity-70 mb-4">$ skills</div>
+                  <div className="flex flex-wrap gap-3">
                     {['Node.js', 'Python', 'Go', 'AWS', 'Docker', 'Kubernetes'].map((skill) => (
                       <span
                         key={skill}
-                        className="px-3 py-1.5 border border-green-500/40 text-green-400 rounded-sm text-xs hover:bg-green-500/10 hover:border-green-500/60 transition-all duration-300 cursor-default"
+                        className="px-4 py-2 border border-green-500/40 text-green-400 rounded-sm text-xs hover:bg-green-500/10 hover:border-green-500/60 transition-all duration-300 cursor-default"
                         style={{
                           fontSize: `clamp(0.625rem, ${terminalBounds.width * cellSize * 0.018}px, 0.875rem)`,
                           textShadow: '0 0 10px rgba(34, 197, 94, 0.2)'
@@ -532,10 +502,45 @@ export default function LandingPage() {
 
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&display=swap');
+        
         @keyframes wipeOut {
           0% { clip-path: circle(0% at 50% 50%); }
           100% { clip-path: circle(150% at 50% 50%); }
         }
+        
+        @keyframes searchFade {
+          0% {
+            fill: rgba(34, 197, 94, 0.9);
+            stroke: rgba(34, 197, 94, 1);
+            filter: brightness(1.5);
+          }
+          100% {
+            fill: rgba(34, 197, 94, 0.35);
+            stroke: rgba(34, 197, 94, 0.6);
+            filter: brightness(1);
+          }
+        }
+        
+        @keyframes pathPulse {
+          0%, 100% {
+            fill: rgba(234, 179, 8, 0.7);
+            stroke: rgba(250, 204, 21, 1);
+            filter: brightness(1);
+            transform: scale(1);
+          }
+          50% {
+            fill: rgba(234, 179, 8, 0.95);
+            stroke: rgba(250, 204, 21, 1);
+            filter: brightness(1.3) drop-shadow(0 0 8px rgba(250, 204, 21, 0.8));
+            transform: scale(1.05);
+          }
+        }
+        
+        .path-node {
+          transform-origin: center;
+          transform-box: fill-box;
+        }
+        
         * {
           -webkit-font-smoothing: antialiased;
           -moz-osx-font-smoothing: grayscale;
