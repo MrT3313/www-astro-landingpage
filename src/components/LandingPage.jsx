@@ -86,6 +86,8 @@ export default function LandingPage() {
   const containerRef = useRef(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [cellSize, setCellSize] = useState(40);
+  const [cellWidth, setCellWidth] = useState(40);
+  const [cellHeight, setCellHeight] = useState(40);
   const [grid, setGrid] = useState({ cols: 0, rows: 0 });
   const [dynamicWalls, setDynamicWalls] = useState([]);
   const [terminalBounds, setTerminalBounds] = useState({ x: 0, y: 0, width: 0, height: 0 });
@@ -108,29 +110,102 @@ export default function LandingPage() {
   // Phase control
   const [phase, setPhase] = useState('SETUP');
   const hasStartedRef = useRef(false);
+  
+  // Resize handling
+  const [isResizing, setIsResizing] = useState(false);
+  const initialDimensionsRef = useRef({ width: 0, height: 0 });
 
   // Calculate grid dimensions
-  useEffect(() => {
-    const updateDimensions = () => {
-      if (containerRef.current) {
-        const width = window.innerWidth;
-        const height = window.innerHeight;
-        setDimensions({ width, height });
+  const updateDimensions = () => {
+    if (containerRef.current) {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      setDimensions({ width, height });
 
-        const targetCellSize = width < 768 ? 30 : width < 1200 ? 35 : 40;
-        const cols = Math.floor(width / targetCellSize);
-        const rows = Math.floor(height / targetCellSize);
+      const targetCellSize = width < 768 ? 30 : width < 1200 ? 35 : 40;
+      const cols = Math.floor(width / targetCellSize);
+      const rows = Math.floor(height / targetCellSize);
+      
+      // Calculate exact cell dimensions to fill viewport perfectly
+      const cWidth = width / cols;
+      const cHeight = height / rows;
+      
+      setCellWidth(cWidth);
+      setCellHeight(cHeight);
+      setCellSize(cWidth); // Keep for backwards compatibility
+      setGrid({ cols, rows });
+      
+      return { width, height };
+    }
+    return null;
+  };
+
+  // Initial setup
+  useEffect(() => {
+    const dims = updateDimensions();
+    if (dims) {
+      initialDimensionsRef.current = dims;
+    }
+  }, []);
+
+  // Detect resize with debounce
+  useEffect(() => {
+    let resizeTimeout = null;
+    
+    const handleResize = () => {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      
+      // Check if dimensions actually changed significantly (more than 5px)
+      const widthChanged = Math.abs(width - initialDimensionsRef.current.width) > 5;
+      const heightChanged = Math.abs(height - initialDimensionsRef.current.height) > 5;
+      
+      if (widthChanged || heightChanged) {
+        // Clear existing timeout
+        if (resizeTimeout) {
+          clearTimeout(resizeTimeout);
+        }
         
-        const actualCellSize = cols > 0 ? width / cols : targetCellSize;
-        setCellSize(actualCellSize);
-        setGrid({ cols, rows });
+        // Start pausing if not already
+        if (!isResizing) {
+          console.log('🟠 RESIZE START - Dimensions changed');
+          setIsResizing(true);
+        }
+        
+        // Set timeout to end resize (500ms after last resize event)
+        resizeTimeout = setTimeout(() => {
+          console.log('🟠 RESIZE END - Resizing stopped');
+          setIsResizing(false);
+          
+          // Update dimensions
+          const newDims = updateDimensions();
+          if (newDims) {
+            initialDimensionsRef.current = newDims;
+          }
+          
+          // Reset everything
+          hasStartedRef.current = false;
+          setPhase('SETUP');
+          setSearchedNodes([]);
+          setFinalPath([]);
+          setIsWiping(false);
+          setCurrentSearchIndex(0);
+          setCurrentPathIndex(0);
+          allSearchStepsRef.current = [];
+          allPathNodesRef.current = [];
+        }, 500);
       }
     };
-
-    updateDimensions();
-    window.addEventListener('resize', updateDimensions);
-    return () => window.removeEventListener('resize', updateDimensions);
-  }, []);
+    
+    window.addEventListener('resize', handleResize);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (resizeTimeout) {
+        clearTimeout(resizeTimeout);
+      }
+    };
+  }, [isResizing]);
 
   // Calculate terminal bounds
   useEffect(() => {
@@ -178,28 +253,68 @@ export default function LandingPage() {
   // SETUP - only runs once when grid is ready
   useEffect(() => {
     if (phase !== 'SETUP') return;
-    if (grid.cols === 0 || grid.rows === 0 || terminalBounds.width === 0) return;
+    if (grid.cols === 0 || grid.rows === 0) return;
     if (hasStartedRef.current) return;
+    if (isResizing) return; // Don't start if resizing
     
     hasStartedRef.current = true;
     console.log('🔵 SETUP: Generating grid...');
 
+    // Calculate terminal bounds FIRST, synchronously
+    let terminalCols = Math.floor(grid.cols * 0.7);
+    const terminalRows = Math.min(Math.floor(grid.rows * 0.40), 10);
+    
+    const totalSpacing = grid.cols - terminalCols;
+    if (totalSpacing % 2 !== 0) {
+      terminalCols = terminalCols - 1;
+    }
+    
+    const startX = (grid.cols - terminalCols) / 2;
+    const startY = Math.floor((grid.rows - terminalRows) / 2);
+    
+    const currentTerminalBounds = {
+      x: startX,
+      y: startY,
+      width: terminalCols,
+      height: terminalRows
+    };
+    
+    // Update terminal bounds state
+    setTerminalBounds(currentTerminalBounds);
+    
+    // Helper function using the CURRENT terminal bounds
+    const isInCurrentTerminal = (x, y) => {
+      return x >= currentTerminalBounds.x && x < currentTerminalBounds.x + currentTerminalBounds.width &&
+             y >= currentTerminalBounds.y && y < currentTerminalBounds.y + currentTerminalBounds.height;
+    };
+    
+    const getRandomPointInCurrentGrid = (walls) => {
+      let x, y;
+      let attempts = 0;
+      do {
+        x = Math.floor(Math.random() * grid.cols);
+        y = Math.floor(Math.random() * grid.rows);
+        attempts++;
+      } while ((isInCurrentTerminal(x, y) || isWall(x, y, walls)) && attempts < 1000);
+      return { x, y };
+    };
+
     const newWalls = [];
     const totalCells = grid.cols * grid.rows;
-    const terminalCells = terminalBounds.width * terminalBounds.height;
+    const terminalCells = currentTerminalBounds.width * currentTerminalBounds.height;
     const availableCells = totalCells - terminalCells;
     const numWalls = Math.floor(availableCells * 0.35);
     
     for (let i = 0; i < numWalls; i++) {
-      const point = getRandomPoint(newWalls);
+      const point = getRandomPointInCurrentGrid(newWalls);
       newWalls.push([point.x, point.y]);
     }
     
     setDynamicWalls(newWalls);
     
     // Get start and end points that are NOT on walls
-    const start = getRandomPoint(newWalls);
-    const end = getRandomPoint(newWalls);
+    const start = getRandomPointInCurrentGrid(newWalls);
+    const end = getRandomPointInCurrentGrid(newWalls);
     
     setStartPoint(start);
     setEndPoint(end);
@@ -209,16 +324,16 @@ export default function LandingPage() {
     setCurrentSearchIndex(0);
     setCurrentPathIndex(0);
 
-    const wallSet = [...newWalls, ...Array.from({ length: terminalBounds.height }, (_, i) => 
-      Array.from({ length: terminalBounds.width }, (_, j) => 
-        [terminalBounds.x + j, terminalBounds.y + i]
+    const wallSet = [...newWalls, ...Array.from({ length: currentTerminalBounds.height }, (_, i) => 
+      Array.from({ length: currentTerminalBounds.width }, (_, j) => 
+        [currentTerminalBounds.x + j, currentTerminalBounds.y + i]
       )
     ).flat()];
     
     console.log('Grid:', grid.cols, 'x', grid.rows);
     console.log('Start:', start);
     console.log('End:', end);
-    console.log('Walls:', newWalls.length, 'random walls +', terminalBounds.width * terminalBounds.height, 'terminal cells =', wallSet.length, 'total walls');
+    console.log('Walls:', newWalls.length, 'random walls +', currentTerminalBounds.width * currentTerminalBounds.height, 'terminal cells =', wallSet.length, 'total walls');
     
     const pathFinder = new PathFinder(grid, wallSet);
     const result = pathFinder.findPath(start, end, grid.cols, grid.rows);
@@ -245,11 +360,12 @@ export default function LandingPage() {
     console.log('🟢 Immediately changing to SEARCHING phase');
     setPhase('SEARCHING');
 
-  }, [phase, grid, terminalBounds]);
+  }, [phase, grid, isResizing]);
 
   // SEARCHING - animate search nodes one by one
   useEffect(() => {
     if (phase !== 'SEARCHING') return;
+    if (isResizing) return; // Pause during resize
     
     console.log('📊 SEARCHING - showing node', currentSearchIndex, 'of', allSearchStepsRef.current.length);
     
@@ -269,11 +385,12 @@ export default function LandingPage() {
     }, searchSpeed);
     
     return () => clearTimeout(timer);
-  }, [phase, currentSearchIndex, searchSpeed]);
+  }, [phase, currentSearchIndex, searchSpeed, isResizing]);
 
   // PATH - animate path nodes one by one
   useEffect(() => {
     if (phase !== 'PATH') return;
+    if (isResizing) return; // Pause during resize
     
     console.log('📈 PATH - showing node', currentPathIndex, 'of', allPathNodesRef.current.length);
     
@@ -293,11 +410,12 @@ export default function LandingPage() {
     }, pathSpeed);
     
     return () => clearTimeout(timer);
-  }, [phase, currentPathIndex, pathSpeed]);
+  }, [phase, currentPathIndex, pathSpeed, isResizing]);
 
   // PAUSE - show complete result
   useEffect(() => {
     if (phase !== 'PAUSE') return;
+    if (isResizing) return; // Pause during resize
     
     console.log('⏸️  PAUSE - Showing complete path for 2 seconds');
     
@@ -308,11 +426,12 @@ export default function LandingPage() {
     }, 2000);
     
     return () => clearTimeout(timer);
-  }, [phase]);
+  }, [phase, isResizing]);
 
   // WIPE - clear and restart
   useEffect(() => {
     if (phase !== 'WIPE') return;
+    if (isResizing) return; // Pause during resize
     
     console.log('💫 WIPE - Clearing screen');
     
@@ -323,7 +442,7 @@ export default function LandingPage() {
     }, 800);
     
     return () => clearTimeout(timer);
-  }, [phase]);
+  }, [phase, isResizing]);
 
   return (
     <div 
@@ -332,11 +451,17 @@ export default function LandingPage() {
       style={{ fontFamily: "'IBM Plex Mono', 'Courier New', monospace" }}
     >
       <div className="absolute inset-0">
-        <svg width={dimensions.width} height={dimensions.height} className="absolute inset-0">
+        <svg 
+          width={dimensions.width} 
+          height={dimensions.height} 
+          viewBox={`0 0 ${dimensions.width} ${dimensions.height}`}
+          className="absolute inset-0"
+          preserveAspectRatio="xMidYMid meet"
+        >
           <defs>
-            <pattern id="grid" width={cellSize} height={cellSize} patternUnits="userSpaceOnUse">
+            <pattern id="grid" width={cellWidth} height={cellHeight} patternUnits="userSpaceOnUse">
               <path 
-                d={`M ${cellSize} 0 L 0 0 0 ${cellSize}`} 
+                d={`M ${cellWidth} 0 L 0 0 0 ${cellHeight}`} 
                 fill="none" 
                 stroke="rgba(100, 116, 139, 0.4)" 
                 strokeWidth="1"
@@ -349,10 +474,10 @@ export default function LandingPage() {
           {dynamicWalls.map(([x, y], idx) => (
             <rect
               key={`wall-${idx}`}
-              x={x * cellSize}
-              y={y * cellSize}
-              width={cellSize}
-              height={cellSize}
+              x={x * cellWidth}
+              y={y * cellHeight}
+              width={cellWidth}
+              height={cellHeight}
               fill="rgba(71, 85, 105, 0.65)"
               className="transition-all duration-300"
               style={{ opacity: isWiping ? 0 : 1 }}
@@ -368,10 +493,10 @@ export default function LandingPage() {
             return (
               <rect
                 key={`searched-${idx}`}
-                x={node.x * cellSize + cellSize * 0.1}
-                y={node.y * cellSize + cellSize * 0.1}
-                width={cellSize * 0.8}
-                height={cellSize * 0.8}
+                x={node.x * cellWidth + cellWidth * 0.1}
+                y={node.y * cellHeight + cellHeight * 0.1}
+                width={cellWidth * 0.8}
+                height={cellHeight * 0.8}
                 fill="rgba(34, 197, 94, 0.35)"
                 stroke="rgba(34, 197, 94, 0.6)"
                 strokeWidth="1.5"
@@ -389,9 +514,9 @@ export default function LandingPage() {
           {startPoint && (
             <g className="transition-opacity duration-300" style={{ opacity: isWiping ? 0 : 1 }}>
               <circle
-                cx={startPoint.x * cellSize + cellSize / 2}
-                cy={startPoint.y * cellSize + cellSize / 2}
-                r={cellSize / 2.5}
+                cx={startPoint.x * cellWidth + cellWidth / 2}
+                cy={startPoint.y * cellHeight + cellHeight / 2}
+                r={Math.min(cellWidth, cellHeight) / 2.5}
                 fill="rgba(59, 130, 246, 0.6)"
                 stroke="rgba(59, 130, 246, 1)"
                 strokeWidth="2"
@@ -403,9 +528,9 @@ export default function LandingPage() {
           {endPoint && (
             <g className="transition-opacity duration-300" style={{ opacity: isWiping ? 0 : 1 }}>
               <circle
-                cx={endPoint.x * cellSize + cellSize / 2}
-                cy={endPoint.y * cellSize + cellSize / 2}
-                r={cellSize / 2.5}
+                cx={endPoint.x * cellWidth + cellWidth / 2}
+                cy={endPoint.y * cellHeight + cellHeight / 2}
+                r={Math.min(cellWidth, cellHeight) / 2.5}
                 fill="rgba(168, 85, 247, 0.6)"
                 stroke="rgba(168, 85, 247, 1)"
                 strokeWidth="2"
@@ -422,10 +547,10 @@ export default function LandingPage() {
             return (
               <rect
                 key={`path-${idx}`}
-                x={node.x * cellSize + cellSize * 0.1}
-                y={node.y * cellSize + cellSize * 0.1}
-                width={cellSize * 0.8}
-                height={cellSize * 0.8}
+                x={node.x * cellWidth + cellWidth * 0.1}
+                y={node.y * cellHeight + cellHeight * 0.1}
+                width={cellWidth * 0.8}
+                height={cellHeight * 0.8}
                 fill="rgba(234, 179, 8, 0.7)"
                 stroke="rgba(250, 204, 21, 1)"
                 strokeWidth="2"
@@ -445,7 +570,11 @@ export default function LandingPage() {
         )}
       </div>
 
-      <MockTerminal terminalBounds={terminalBounds} cellSize={cellSize} />
+      <MockTerminal 
+        terminalBounds={terminalBounds} 
+        cellWidth={cellWidth} 
+        cellHeight={cellHeight} 
+      />
 
       <div className="absolute inset-0 pointer-events-none z-20 opacity-5"
            style={{ background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(34, 197, 94, 0.1) 2px, rgba(34, 197, 94, 0.1) 4px)' }} />

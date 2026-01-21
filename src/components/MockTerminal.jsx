@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-function RotatingTitle({ cellSize, terminalWidth }) {
+function RotatingTitle({ cellWidth, terminalWidth }) {
   const titles = [
     "Senior Full Stack Software Engineer",
     "Builder",
@@ -26,7 +26,7 @@ function RotatingTitle({ cellSize, terminalWidth }) {
         key={`current-${currentIndex}`}
         className="text-green-300/80 tracking-wide absolute w-full animate-slideDown"
         style={{ 
-          fontSize: `clamp(0.875rem, ${terminalWidth * cellSize * 0.025}px, 1.125rem)`,
+          fontSize: `clamp(0.875rem, ${terminalWidth * cellWidth * 0.025}px, 1.125rem)`,
           top: 0,
           left: 0
         }}
@@ -38,7 +38,7 @@ function RotatingTitle({ cellSize, terminalWidth }) {
         key={`next-${nextIndex}`}
         className="text-green-300/80 tracking-wide absolute w-full animate-slideDownIn"
         style={{ 
-          fontSize: `clamp(0.875rem, ${terminalWidth * cellSize * 0.025}px, 1.125rem)`,
+          fontSize: `clamp(0.875rem, ${terminalWidth * cellWidth * 0.025}px, 1.125rem)`,
           top: 0,
           left: 0
         }}
@@ -49,7 +49,7 @@ function RotatingTitle({ cellSize, terminalWidth }) {
   );
 }
 
-export default function MockTerminal({ terminalBounds, cellSize }) {
+export default function MockTerminal({ terminalBounds, cellWidth, cellHeight }) {
   if (terminalBounds.width === 0) {
     return null;
   }
@@ -59,10 +59,10 @@ export default function MockTerminal({ terminalBounds, cellSize }) {
       <div 
         className="absolute z-10 transition-all duration-300"
         style={{
-          left: `${terminalBounds.x * cellSize}px`,
-          top: `${terminalBounds.y * cellSize}px`,
-          width: `${terminalBounds.width * cellSize}px`,
-          height: `${terminalBounds.height * cellSize}px`,
+          left: `${terminalBounds.x * cellWidth}px`,
+          top: `${terminalBounds.y * cellHeight}px`,
+          width: `${terminalBounds.width * cellWidth}px`,
+          height: `${terminalBounds.height * cellHeight}px`,
         }}
       >
         <div className="w-full h-full bg-black/90 backdrop-blur-sm border border-green-500/30 rounded-sm shadow-2xl flex flex-col overflow-hidden"
@@ -81,7 +81,7 @@ export default function MockTerminal({ terminalBounds, cellSize }) {
                 <div className="text-green-500 text-sm opacity-70">$ whoami</div>
                 <h1 className="text-white font-bold tracking-tight leading-tight"
                     style={{ 
-                      fontSize: `clamp(1.5rem, ${terminalBounds.width * cellSize * 0.08}px, 3.5rem)`,
+                      fontSize: `clamp(1.5rem, ${terminalBounds.width * cellWidth * 0.08}px, 3.5rem)`,
                       textShadow: '0 0 20px rgba(34, 197, 94, 0.3)'
                     }}>
                   Reed Turgeon
@@ -92,9 +92,9 @@ export default function MockTerminal({ terminalBounds, cellSize }) {
                 <div className="text-green-500 text-sm opacity-70">$ reedturgeon --title</div>
                 <div className="relative overflow-hidden"
                      style={{ 
-                       height: `clamp(1.25rem, ${terminalBounds.width * cellSize * 0.025}px, 1.625rem)`
+                       height: `clamp(1.25rem, ${terminalBounds.width * cellWidth * 0.025}px, 1.625rem)`
                      }}>
-                  <RotatingTitle cellSize={cellSize} terminalWidth={terminalBounds.width} />
+                  <RotatingTitle cellWidth={cellWidth} terminalWidth={terminalBounds.width} />
                 </div>
               </div>
               
@@ -106,7 +106,7 @@ export default function MockTerminal({ terminalBounds, cellSize }) {
                       key={skill}
                       className="px-4 py-2 border border-green-500/40 text-green-400 rounded-sm text-xs hover:bg-green-500/10 hover:border-green-500/60 transition-all duration-300 cursor-default"
                       style={{
-                        fontSize: `clamp(0.625rem, ${terminalBounds.width * cellSize * 0.018}px, 0.875rem)`,
+                        fontSize: `clamp(0.625rem, ${terminalBounds.width * cellWidth * 0.018}px, 0.875rem)`,
                         textShadow: '0 0 10px rgba(34, 197, 94, 0.2)'
                       }}
                     >
