@@ -1,1 +1,2 @@
-export { AStarSearch, type Node, type Grid, type Wall, type PathResult } from './astar.js';
+export { AStarSearch } from './astar';
+export { type Node, type Grid, type Wall, type PathResult } from './types/index';

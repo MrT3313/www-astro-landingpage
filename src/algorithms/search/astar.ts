@@ -1,10 +1,5 @@
-export type Node = { x: number; y: number };
-export type Grid = { cols: number; rows: number };
-export type Wall = [number, number];
-export type PathResult = {
-  path: Node[];
-  searchSteps: Node[];
-};
+import { getNeighbors } from './utils/index';
+import type { Node, Grid, Wall, PathResult } from './types/index';
 
 export class AStarSearch {
   private grid: Grid;
@@ -20,20 +15,6 @@ export class AStarSearch {
   // h_cost: Estimates distance from current to goal (Manhattan distance for 4-directional grid)
   private heuristic(a: Node, b: Node): number {
     return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
-  }
-
-  private getNeighbors(node: Node, cols: number, rows: number): Node[] {
-    const neighbors: Node[] = [];
-    const directions: [number, number][] = [[0, 1], [1, 0], [0, -1], [-1, 0]];
-    
-    for (const [dx, dy] of directions) {
-      const x = node.x + dx;
-      const y = node.y + dy;
-      if (x >= 0 && x < cols && y >= 0 && y < rows && !this.walls.has(`${x},${y}`)) {
-        neighbors.push({ x, y });
-      }
-    }
-    return neighbors;
   }
 
   findPath(start: Node, end: Node, cols: number, rows: number): PathResult {
@@ -71,7 +52,7 @@ export class AStarSearch {
         return { path, searchSteps: this.searchSteps };
       }
 
-      for (const neighbor of this.getNeighbors(current, cols, rows)) {
+      for (const neighbor of getNeighbors(current, cols, rows, this.walls)) {
         if (closedSet.has(key(neighbor))) {
           continue;
         }
