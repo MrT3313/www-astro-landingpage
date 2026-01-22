@@ -62,8 +62,8 @@ const TERMINAL_CONFIG: Record<BreakpointName, BreakpointConfig> = {
         minCols: 8,
         maxCols: null,
         marginRows: 2,
-        minRows: 8,
-        maxRows: 8,
+        minRows: 10,
+        maxRows: 10,
     },
     
     // 640-767px - phones landscape
@@ -72,8 +72,8 @@ const TERMINAL_CONFIG: Record<BreakpointName, BreakpointConfig> = {
         minCols: 12,
         maxCols: null,
         marginRows: 2,
-        minRows: 8,
-        maxRows: 8,
+        minRows: 9,
+        maxRows: 9,
     },
     
     // 768-1023px - tablets
@@ -82,8 +82,8 @@ const TERMINAL_CONFIG: Record<BreakpointName, BreakpointConfig> = {
         minCols: 23,
         maxCols: 23,
         marginRows: 2,
-        minRows: 8,
-        maxRows: 8,
+        minRows: 9,
+        maxRows: 9,
     },
     
     // 1024-1279px - laptops
@@ -92,8 +92,8 @@ const TERMINAL_CONFIG: Record<BreakpointName, BreakpointConfig> = {
         minCols: 23,
         maxCols: 23,
         marginRows: 2,
-        minRows: 8,
-        maxRows: 8,
+        minRows: 10,
+        maxRows: 10,
     },
     
     // 1280-1535px - desktops
