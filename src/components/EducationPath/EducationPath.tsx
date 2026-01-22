@@ -1,90 +1,12 @@
 import React, { useState } from 'react';
-import { GraduationCap, Briefcase, Code, TrendingUp, Terminal } from 'lucide-react';
+import { Terminal } from 'lucide-react';
 
-interface EducationNode {
-  type: 'education';
-  institution: string;
-  degree: string;
-  field: string;
-  year?: string;
-  position: 'left' | 'right';
-}
+import { pathData } from './educationPath';
+import EducationNode from './components/EducationNode';
+import EmploymentNode from './components/EmploymentNode';
 
-interface EmploymentNode {
-  type: 'employment';
-  roles: {
-    company: string;
-    title: string;
-    highlight?: string;
-  }[];
-  position: 'left' | 'right';
-}
-
-type PathNode = EducationNode | EmploymentNode;
-
-const RiverRapidsEducationPath = () => {
+const EducationPath = () => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-
-  const pathData: PathNode[] = [
-    {
-      type: 'education',
-      institution: 'Babson College',
-      degree: 'Undergraduate',
-      field: 'Finance',
-      year: '2014',
-      position: 'left'
-    },
-    {
-      type: 'employment',
-      roles: [
-        {
-          company: 'PiraShield',
-          title: 'Comptroller & COO',
-          highlight: 'Startup operations'
-        }
-      ],
-      position: 'right'
-    },
-    {
-      type: 'education',
-      institution: 'Lambda School',
-      degree: 'Full Stack Development',
-      field: 'Certificate',
-      year: '2019',
-      position: 'left'
-    },
-    {
-      type: 'employment',
-      roles: [
-        {
-          company: 'Studios',
-          title: 'Backend Lead'
-        },
-        {
-          company: 'Colvinrun',
-          title: 'Full Stack Engineer'
-        },
-        {
-          company: 'HQ',
-          title: 'Full Stack Developer'
-        },
-        {
-          company: 'Meratas',
-          title: 'Lead Dev → Director',
-          highlight: 'Lender Marketplace'
-        }
-      ],
-      position: 'right'
-    },
-    {
-      type: 'education',
-      institution: 'IU Bloomington',
-      degree: 'Graduate School',
-      field: 'Data Science',
-      year: 'Current',
-      position: 'left'
-    }
-  ];
 
   return (
     <div className="path-container">
@@ -276,22 +198,23 @@ const RiverRapidsEducationPath = () => {
           border-color: #00ff41;
         }
 
-        .education-node::before {
-          content: '>';
-          position: absolute;
-          left: 8px;
-          top: 8px;
-          color: #00ff41;
-          font-size: 12px;
-          font-weight: 700;
-          opacity: 0.6;
-        }
-
         .node-header {
           display: flex;
           align-items: center;
           gap: 10px;
           margin-bottom: 12px;
+          position: relative;
+          padding-left: 22px;
+        }
+
+        .node-header::before {
+          content: '>';
+          position: absolute;
+          left: 0;
+          color: #00ff41;
+          font-size: 14px;
+          font-weight: 700;
+          opacity: 0.6;
         }
 
         .node-icon {
@@ -549,57 +472,23 @@ const RiverRapidsEducationPath = () => {
         {pathData.map((node, index) => {
           if (node.type === 'education') {
             return (
-              <div 
-                key={index} 
-                className={`node-wrapper ${node.position}`}
+              <EducationNode
+                key={index}
+                node={node}
+                index={index}
                 onMouseEnter={() => setHoveredIndex(index)}
                 onMouseLeave={() => setHoveredIndex(null)}
-              >
-                <div className="center-dot" />
-                <div className="education-node">
-                  <div className="node-header">
-                    <div className="node-icon">
-                      <GraduationCap />
-                    </div>
-                    <div className="institution-name">{node.institution}</div>
-                  </div>
-                  <div className="degree-info">{node.degree}</div>
-                  <div className="field-info">{node.field}</div>
-                  {node.year && <div className="year-badge">{node.year}</div>}
-                </div>
-              </div>
+              />
             );
           } else {
             return (
-              <div 
-                key={index} 
-                className={`node-wrapper ${node.position}`}
+              <EmploymentNode
+                key={index}
+                node={node}
+                index={index}
                 onMouseEnter={() => setHoveredIndex(index)}
                 onMouseLeave={() => setHoveredIndex(null)}
-              >
-                <div className="center-dot" />
-                <div className="employment-node">
-                  <div className="roles-grid">
-                    {node.roles.map((role, roleIndex) => (
-                      <div key={roleIndex} className="role-card">
-                        <div className="role-card-header">
-                          <div className="role-icon">
-                            {role.title.includes('Director') || role.title.includes('Lead') ? 
-                              <TrendingUp /> : 
-                              role.company === 'Studios' ? <Code /> : <Briefcase />
-                            }
-                          </div>
-                          <div className="company-name">{role.company}</div>
-                        </div>
-                        <div className="role-title">{role.title}</div>
-                        {role.highlight && (
-                          <div className="role-highlight">// {role.highlight}</div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
+              />
             );
           }
         })}
@@ -608,4 +497,4 @@ const RiverRapidsEducationPath = () => {
   );
 };
 
-export default RiverRapidsEducationPath;
+export default EducationPath;
