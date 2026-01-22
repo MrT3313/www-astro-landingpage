@@ -52,9 +52,9 @@ export const pathData: PathNode[] = [
     },
     {
         type: 'education',
-        institution: 'IU Bloomington',
+        institution: 'Indiana University Bloomington',
         degree: 'Graduate School',
-        field: 'Data Science',
+        field: 'MS in Data Science',
         year: 'Current',
         position: 'left'
     }
