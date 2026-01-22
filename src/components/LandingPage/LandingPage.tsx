@@ -503,6 +503,15 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&display=swap');
         
+        html, body {
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+        
+        html::-webkit-scrollbar, body::-webkit-scrollbar {
+          display: none;
+        }
+        
         @keyframes wipeOut {
           0% { clip-path: circle(0% at 50% 50%); }
           100% { clip-path: circle(150% at 50% 50%); }
