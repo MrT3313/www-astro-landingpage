@@ -4,6 +4,7 @@ import { z } from 'zod';
 export const EducationNodeSchema = z.object({
   type: z.literal('education'),
   institution: z.string().min(1, 'Institution name is required'),
+  institute_subtitle: z.string().optional(),
   degree: z.string().min(1, 'Degree is required'),
   field: z.string().min(1, 'Field of study is required'),
   year: z.string().optional(),

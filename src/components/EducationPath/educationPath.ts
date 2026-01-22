@@ -22,6 +22,7 @@ export const pathData: PathNode[] = [
     {
         type: 'education',
         institution: 'Lambda School',
+        institute_subtitle: 'now Bloom Tech',
         degree: 'Full Stack Development',
         field: 'Certificate',
         position: 'left'
