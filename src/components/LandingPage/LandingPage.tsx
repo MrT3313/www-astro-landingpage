@@ -1,27 +1,33 @@
 import React, { useState, useEffect, useRef } from 'react';
-import MockTerminal from './MockTerminal.js';
+import MockTerminal from './MockTerminal';
 import { AStarSearch } from '../../algorithms/search/index';
+import type { Node, Grid, Wall } from '../../algorithms/search/types/index';
 
-export default function LandingPage({ debug = false, searchAlgorithm = AStarSearch }) {
-  const containerRef = useRef(null);
+interface LandingPageProps {
+  debug?: boolean;
+  searchAlgorithm?: typeof AStarSearch;
+}
+
+export default function LandingPage({ debug = false, searchAlgorithm = AStarSearch }: LandingPageProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [cellSize, setCellSize] = useState(40);
   const [cellWidth, setCellWidth] = useState(40);
   const [cellHeight, setCellHeight] = useState(40);
-  const [grid, setGrid] = useState({ cols: 0, rows: 0 });
-  const [dynamicWalls, setDynamicWalls] = useState([]);
+  const [grid, setGrid] = useState<Grid>({ cols: 0, rows: 0 });
+  const [dynamicWalls, setDynamicWalls] = useState<Wall[]>([]);
   const [terminalBounds, setTerminalBounds] = useState({ x: 0, y: 0, width: 0, height: 0 });
-  const [startPoint, setStartPoint] = useState(null);
-  const [endPoint, setEndPoint] = useState(null);
-  const [searchedNodes, setSearchedNodes] = useState([]);
-  const [finalPath, setFinalPath] = useState([]);
+  const [startPoint, setStartPoint] = useState<Node | null>(null);
+  const [endPoint, setEndPoint] = useState<Node | null>(null);
+  const [searchedNodes, setSearchedNodes] = useState<Node[]>([]);
+  const [finalPath, setFinalPath] = useState<Node[]>([]);
   const [isWiping, setIsWiping] = useState(false);
   const [searchSpeed, setSearchSpeed] = useState(250);
   const [pathSpeed, setPathSpeed] = useState(100);
   
   // Store complete data
-  const allSearchStepsRef = useRef([]);
-  const allPathNodesRef = useRef([]);
+  const allSearchStepsRef = useRef<Node[]>([]);
+  const allPathNodesRef = useRef<Node[]>([]);
   
   // Current index being displayed
   const [currentSearchIndex, setCurrentSearchIndex] = useState(0);
@@ -70,7 +76,7 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
 
   // Detect resize with debounce
   useEffect(() => {
-    let resizeTimeout = null;
+    let resizeTimeout: ReturnType<typeof setTimeout> | null = null;
     
     const handleResize = () => {
       const width = window.innerWidth;
@@ -150,16 +156,16 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
     }
   }, [grid]);
 
-  const isInTerminal = (x, y) => {
+  const isInTerminal = (x: number, y: number) => {
     return x >= terminalBounds.x && x < terminalBounds.x + terminalBounds.width &&
            y >= terminalBounds.y && y < terminalBounds.y + terminalBounds.height;
   };
 
-  const isWall = (x, y, walls) => {
-    return walls.some(([wx, wy]) => wx === x && wy === y);
+  const isWall = (x: number, y: number, walls: Wall[]) => {
+    return walls.some(([wx, wy]: Wall) => wx === x && wy === y);
   };
 
-  const getRandomPoint = (walls) => {
+  const getRandomPoint = (walls: Wall[]) => {
     let x, y;
     let attempts = 0;
     do {
@@ -203,12 +209,12 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
     setTerminalBounds(currentTerminalBounds);
     
     // Helper function using the CURRENT terminal bounds
-    const isInCurrentTerminal = (x, y) => {
+    const isInCurrentTerminal = (x: number, y: number) => {
       return x >= currentTerminalBounds.x && x < currentTerminalBounds.x + currentTerminalBounds.width &&
              y >= currentTerminalBounds.y && y < currentTerminalBounds.y + currentTerminalBounds.height;
     };
     
-    const getRandomPointInCurrentGrid = (walls) => {
+    const getRandomPointInCurrentGrid = (walls: Wall[]) => {
       let x, y;
       let attempts = 0;
       do {
@@ -219,7 +225,7 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
       return { x, y };
     };
 
-    const newWalls = [];
+    const newWalls: Wall[] = [];
     const totalCells = grid.cols * grid.rows;
     const terminalCells = currentTerminalBounds.width * currentTerminalBounds.height;
     const availableCells = totalCells - terminalCells;
@@ -227,7 +233,7 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
     
     for (let i = 0; i < numWalls; i++) {
       const point = getRandomPointInCurrentGrid(newWalls);
-      newWalls.push([point.x, point.y]);
+      newWalls.push([point.x, point.y] as Wall);
     }
     
     setDynamicWalls(newWalls);
@@ -244,9 +250,9 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
     setCurrentSearchIndex(0);
     setCurrentPathIndex(0);
 
-    const wallSet = [...newWalls, ...Array.from({ length: currentTerminalBounds.height }, (_, i) => 
+    const wallSet: Wall[] = [...newWalls, ...Array.from({ length: currentTerminalBounds.height }, (_, i) => 
       Array.from({ length: currentTerminalBounds.width }, (_, j) => 
-        [currentTerminalBounds.x + j, currentTerminalBounds.y + i]
+        [currentTerminalBounds.x + j, currentTerminalBounds.y + i] as Wall
       )
     ).flat()];
     

@@ -13,7 +13,12 @@ const TITLES = [
   "8-State Nomad ",
 ];
 
-function RotatingTitle({ cellWidth, terminalWidth }) {
+interface RotatingTitleProps {
+  cellWidth: number;
+  terminalWidth: number;
+}
+
+function RotatingTitle({ cellWidth, terminalWidth }: RotatingTitleProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [displayText, setDisplayText] = useState("");
   const [isTyping, setIsTyping] = useState(true);
@@ -54,7 +59,13 @@ function RotatingTitle({ cellWidth, terminalWidth }) {
   );
 }
 
-export default function MockTerminal({ terminalBounds, cellWidth, cellHeight }) {
+interface MockTerminalProps {
+  terminalBounds: { x: number; y: number; width: number; height: number };
+  cellWidth: number;
+  cellHeight: number;
+}
+
+export default function MockTerminal({ terminalBounds, cellWidth, cellHeight }: MockTerminalProps) {
   if (terminalBounds.width === 0) {
     return null;
   }
