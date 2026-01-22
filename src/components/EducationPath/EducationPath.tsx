@@ -180,17 +180,19 @@ const EducationPath = () => {
             opacity: 1;
           }
         }
-
-        .terminal-header::before {
-          content: '$ ';
-          color: #00ff41;
-          font-weight: 700;
-        }
       `}</style>
 
-      <div className="absolute top-5 left-5 md:left-10 text-xs md:text-sm text-[#00ff41] font-normal opacity-70 font-['JetBrains_Mono',monospace] terminal-header">cat ~/journey/education-path.log</div>
+      <div className="absolute top-5 left-5 md:left-10 z-10">
+        <div className="space-y-3">
+          <div className="text-sm text-green-500 opacity-70 font-['JetBrains_Mono',monospace]">$ reedturgeon --linkedin</div>
+          <div className="pl-4 text-sm text-green-300/80 font-['JetBrains_Mono',monospace]">
+            <a href="https://www.linkedin.com/in/reedturgeon" target="_blank" rel="noopener noreferrer" className="inline-block underline hover:opacity-100 transition-opacity">https://www.linkedin.com/in/reedturgeon/</a>
+          </div>
+          <div className="text-sm text-green-500 opacity-70 font-['JetBrains_Mono',monospace]">$ cat ~/journey/education-and-employment.log</div>
+        </div>
+      </div>
 
-      <div className="relative w-full max-w-[900px] mx-auto journey-path" ref={journeyPathRef}>
+      <div className="relative w-full max-w-[900px] mx-auto journey-path pt-10" ref={journeyPathRef}>
         <svg className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full pointer-events-none z-[1] path-svg" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <filter id="glow">
