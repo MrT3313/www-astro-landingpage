@@ -346,8 +346,12 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
   return (
     <div 
       ref={containerRef}
-      className="relative w-screen h-screen overflow-hidden bg-black"
-      style={{ fontFamily: "'IBM Plex Mono', 'Courier New', monospace" }}
+      className="relative overflow-hidden bg-black"
+      style={{ 
+        fontFamily: "'IBM Plex Mono', 'Courier New', monospace",
+        width: '100vw',
+        height: '100vh'
+      }}
     >
       <div className="absolute inset-0">
         <svg 
@@ -478,6 +482,24 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
       <div className="absolute inset-0 pointer-events-none z-20 opacity-5"
            style={{ background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(34, 197, 94, 0.1) 2px, rgba(34, 197, 94, 0.1) 4px)' }} />
 
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-30 pointer-events-none">
+        <div className="scroll-indicator">
+          <svg 
+            width="32" 
+            height="32" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="rgba(34, 197, 94, 0.8)" 
+            strokeWidth="2" 
+            strokeLinecap="round" 
+            strokeLinejoin="round"
+            className="scroll-arrow"
+          >
+            <path d="M12 5v14M19 12l-7 7-7-7" />
+          </svg>
+        </div>
+      </div>
+
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&display=swap');
         
@@ -512,6 +534,25 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
             filter: brightness(1.3) drop-shadow(0 0 8px rgba(250, 204, 21, 0.8));
             transform: scale(1.05);
           }
+        }
+        
+        @keyframes bounceArrow {
+          0%, 100% {
+            transform: translateY(0);
+            opacity: 0.8;
+          }
+          50% {
+            transform: translateY(8px);
+            opacity: 1;
+          }
+        }
+        
+        .scroll-indicator {
+          animation: bounceArrow 2s ease-in-out infinite;
+        }
+        
+        .scroll-arrow {
+          filter: drop-shadow(0 0 4px rgba(34, 197, 94, 0.6));
         }
         
         .path-node {
