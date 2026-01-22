@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import MockTerminal from './MockTerminal.jsx';
+import MockTerminal from './MockTerminal.js';
 import { AStarSearch } from '../../algorithms/search/index';
 
 export default function LandingPage({ debug = false, searchAlgorithm = AStarSearch }) {
