@@ -1,9 +1,8 @@
 ---
-import Layout from '../layouts/Layout.astro'
-import cx from 'classnames'
-
-const DEBUG = false
-const today = new Date()
+import LandingPage from '../components/LandingPage/LandingPage.jsx';
+import Layout from '../layouts/Layout.astro';
 ---
 
-<Layout title="Reed Turgeon" debug={DEBUG} />
+<Layout>
+	<LandingPage client:load />
+</Layout>

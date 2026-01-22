@@ -1,31 +1,26 @@
 ---
-import GoogleAnalytics from '../components/GoogleAnalytics.astro';
-import { Layout as ReactLayout } from '../components/Layout';
-
-interface Props {
-	title: string;
-	debug?: boolean;
-}
-
-const { title, debug = true } = Astro.props;
 import '../styles/global.css';
 ---
 
 <!doctype html>
 <html lang="en">
 	<head>
-		<GoogleAnalytics />
 		<meta charset="UTF-8" />
-		<meta name="description" content="Reed Turgeon's Personal Website" />
 		<meta name="viewport" content="width=device-width" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="generator" content={Astro.generator} />
-		<title>{title}</title>
+		<title>Reed Turgeon</title>
 	</head>
-	
 	<body>
-		<ReactLayout debug={debug} client:load>
-			<slot />
-		</ReactLayout>
+		<slot />
 	</body>
 </html>
+
+<style>
+	html,
+	body {
+		margin: 0;
+		width: 100%;
+		height: 100%;
+	}
+</style>

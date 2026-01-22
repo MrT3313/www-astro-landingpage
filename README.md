@@ -1,62 +1,46 @@
-# reedturgeon.com
+# Astro Starter Kit: Basics
 
-Personal website built with Astro and Tailwind CSS.
-
-## Hosting / DNS
-
-- [GoDaddy](https://dcc.godaddy.com/control/dnsmanagement?domainName=reedturgeon.com)
-
-| Type  | Name  | IP Address                    | TTL       | What is this?                             | 
-| ---   | ---   | ---                           | ---       | ---                                       |
-| A     | @     | 185.199.108.153	            | 1 Hour    | GitHub Pages CDN IP                       |
-| A     | @     | 185.199.109.153               | 1 Hour    | GitHub Pages CDN IP                       |
-| A     | @     | 185.199.110.153               | 1 Hour    | GitHub Pages CDN IP                       |
-| A     | @     | 185.199.111.153               | 1 Hour    | GitHub Pages CDN IP                       |
-| CNAME | www   | reed-turgeon-domain.github.io | 1 Hour    | Points www subdomain to GitHub Pages site |
-
-## ADRs
-
-- [V0.0_astro-hosting.md](./DOCS/ADRs/V0.0_astro-hosting.md)
-
-## Development Setup
-
-### Prerequisites
-- Node.js (v18+)
-- npm
-
-### Local Development
-
-1. Clone the repository
-
-```bash
-git clone https://github.com/Reed-Turgeon-Domain/landingpage.git
-cd landingpage
+```sh
+npm create astro@latest -- --template basics
 ```
 
-2. Install dependencies
+> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
 
-```bash
-npm install
+## 🚀 Project Structure
+
+Inside of your Astro project, you'll see the following folders and files:
+
+```text
+/
+├── public/
+│   └── favicon.svg
+├── src
+│   ├── assets
+│   │   └── astro.svg
+│   ├── components
+│   │   └── Welcome.astro
+│   ├── layouts
+│   │   └── Layout.astro
+│   └── pages
+│       └── index.astro
+└── package.json
 ```
 
-3. Run the development server
+To learn more about the folder structure of an Astro project, refer to [our guide on project structure](https://docs.astro.build/en/basics/project-structure/).
 
-```bash
-npm run dev
-```
+## 🧞 Commands
 
-4. Open the browser and navigate to `http://localhost:4321`
+All commands are run from the root of the project, from a terminal:
 
-### Build
+| Command                   | Action                                           |
+| :------------------------ | :----------------------------------------------- |
+| `npm install`             | Installs dependencies                            |
+| `npm run dev`             | Starts local dev server at `localhost:4321`      |
+| `npm run build`           | Build your production site to `./dist/`          |
+| `npm run preview`         | Preview your build locally, before deploying     |
+| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
+| `npm run astro -- --help` | Get help using the Astro CLI                     |
 
-```bash
-npm run build
-```
+## 👀 Want to learn more?
 
-Preview production build locally:
-
-```bash
-npm run preview
-```
-
-
+Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
