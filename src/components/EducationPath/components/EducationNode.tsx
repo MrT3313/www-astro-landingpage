@@ -13,6 +13,8 @@ const EducationNode: React.FC<EducationNodeProps> = ({ node, index, onMouseEnter
   return (
     <div 
       className={`node-wrapper ${node.position}`}
+      data-node-type="education"
+      data-node-index={index}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
     >

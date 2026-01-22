@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Terminal } from 'lucide-react';
 
 import { pathData } from './educationPath';
@@ -7,9 +7,44 @@ import EmploymentNode from './components/EmploymentNode';
 
 const EducationPath = () => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [linePositions, setLinePositions] = useState<Array<{ y1: number; y2: number }>>([]);
+  const journeyPathRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const calculateLinePositions = () => {
+      if (!journeyPathRef.current) return;
+
+      const nodeWrappers = journeyPathRef.current.querySelectorAll('.node-wrapper');
+      const positions: Array<{ y1: number; y2: number }> = [];
+
+      for (let i = 0; i < nodeWrappers.length - 1; i++) {
+        const currentWrapper = nodeWrappers[i] as HTMLElement;
+        const nextWrapper = nodeWrappers[i + 1] as HTMLElement;
+        
+        const currentRect = currentWrapper.getBoundingClientRect();
+        const nextRect = nextWrapper.getBoundingClientRect();
+        const journeyPathRect = journeyPathRef.current.getBoundingClientRect();
+        
+        const currentCenterY = currentRect.top - journeyPathRect.top + currentRect.height / 2;
+        const nextCenterY = nextRect.top - journeyPathRect.top + nextRect.height / 2;
+        
+        positions.push({
+          y1: currentCenterY,
+          y2: nextCenterY
+        });
+      }
+
+      setLinePositions(positions);
+    };
+
+    calculateLinePositions();
+    
+    window.addEventListener('resize', calculateLinePositions);
+    return () => window.removeEventListener('resize', calculateLinePositions);
+  }, []);
 
   return (
-    <div className="path-container">
+    <div className="path-container" id="education-path-container">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap');
 
@@ -21,6 +56,7 @@ const EducationPath = () => {
           position: relative;
           width: 100%;
           min-height: 100vh;
+          min-width: 100vw;
           background: #0a0a0a;
           overflow: hidden;
           padding: 60px 40px;
@@ -108,7 +144,7 @@ const EducationPath = () => {
           position: relative;
           display: flex;
           align-items: center;
-          margin: 50px 0;
+          margin: 20px 0;
           z-index: 2;
           animation: slideIn 0.6s ease-out backwards;
         }
@@ -144,7 +180,8 @@ const EducationPath = () => {
         .center-dot {
           position: absolute;
           left: 50%;
-          transform: translateX(-50%);
+          top: 50%;
+          transform: translate(-50%, -50%);
           width: 12px;
           height: 12px;
           background: #1a1a1a;
@@ -189,6 +226,9 @@ const EducationPath = () => {
           cursor: pointer;
           position: relative;
           box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+          width: 320px;
+          min-width: 320px;
+          max-width: 320px;
         }
 
         .education-node:hover {
@@ -204,17 +244,6 @@ const EducationPath = () => {
           gap: 10px;
           margin-bottom: 12px;
           position: relative;
-          padding-left: 22px;
-        }
-
-        .node-header::before {
-          content: '>';
-          position: absolute;
-          left: 0;
-          color: #00ff41;
-          font-size: 14px;
-          font-weight: 700;
-          opacity: 0.6;
         }
 
         .node-icon {
@@ -278,6 +307,9 @@ const EducationPath = () => {
           transition: all 0.3s ease;
           cursor: pointer;
           position: relative;
+          width: 320px;
+          min-width: 320px;
+          max-width: 320px;
         }
 
         .employment-node:hover {
@@ -289,6 +321,7 @@ const EducationPath = () => {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
           gap: 10px;
+          width: 100%;
         }
 
         .role-card {
@@ -431,7 +464,7 @@ const EducationPath = () => {
 
       <div className="terminal-header">cat ~/journey/education-path.log</div>
 
-      <div className="journey-path">
+      <div className="journey-path" ref={journeyPathRef}>
         <svg className="path-svg" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <filter id="glow">
@@ -444,29 +477,25 @@ const EducationPath = () => {
           </defs>
           
           {/* Connection lines between nodes */}
-          {pathData.map((_, index) => {
-            if (index === pathData.length - 1) return null;
-            const yPos = 80 + (index * 180);
-            return (
-              <g key={index}>
-                <line 
-                  className="connection-line" 
-                  x1="50%" 
-                  y1={yPos} 
-                  x2="50%" 
-                  y2={yPos + 180}
-                />
-                <line 
-                  className="connection-line-glow" 
-                  x1="50%" 
-                  y1={yPos} 
-                  x2="50%" 
-                  y2={yPos + 180}
-                  filter="url(#glow)"
-                />
-              </g>
-            );
-          })}
+          {linePositions.map((pos, index) => (
+            <g key={index}>
+              <line 
+                className="connection-line" 
+                x1="50%" 
+                y1={pos.y1} 
+                x2="50%" 
+                y2={pos.y2}
+              />
+              <line 
+                className="connection-line-glow" 
+                x1="50%" 
+                y1={pos.y1} 
+                x2="50%" 
+                y2={pos.y2}
+                filter="url(#glow)"
+              />
+            </g>
+          ))}
         </svg>
 
         {pathData.map((node, index) => {

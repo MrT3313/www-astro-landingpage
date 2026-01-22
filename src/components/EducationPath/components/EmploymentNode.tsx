@@ -13,6 +13,8 @@ const EmploymentNode: React.FC<EmploymentNodeProps> = ({ node, index, onMouseEnt
   return (
     <div 
       className={`node-wrapper ${node.position}`}
+      data-node-type="employment"
+      data-node-index={index}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
     >

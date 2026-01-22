@@ -42,6 +42,10 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
   const [isResizing, setIsResizing] = useState(false);
   const initialDimensionsRef = useRef({ width: 0, height: 0 });
 
+  // Scroll handling
+  const isScrollingRef = useRef(false);
+  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // Calculate grid dimensions
   const updateDimensions = () => {
     if (containerRef.current) {
@@ -343,6 +347,83 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
     return () => clearTimeout(timer);
   }, [phase, isResizing]);
 
+  const scrollToEducationPath = () => {
+    if (isScrollingRef.current) return;
+    
+    const educationPathContainer = document.getElementById('education-path-container');
+    if (!educationPathContainer) return;
+    
+    isScrollingRef.current = true;
+    const rect = educationPathContainer.getBoundingClientRect();
+    const targetScrollY = rect.top + window.scrollY;
+    
+    window.scrollTo({
+      top: targetScrollY,
+      behavior: 'smooth'
+    });
+    
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
+    scrollTimeoutRef.current = setTimeout(() => {
+      isScrollingRef.current = false;
+    }, 1000);
+  };
+
+  const scrollToEmploymentPath = () => {
+    if (isScrollingRef.current) return;
+    
+    const educationPathContainer = document.getElementById('education-path-container');
+    if (!educationPathContainer) return;
+    
+    isScrollingRef.current = true;
+    const rect = educationPathContainer.getBoundingClientRect();
+    const targetScrollY = rect.top + window.scrollY;
+    
+    window.scrollTo({
+      top: targetScrollY,
+      behavior: 'smooth'
+    });
+    
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
+    scrollTimeoutRef.current = setTimeout(() => {
+      isScrollingRef.current = false;
+    }, 1000);
+  };
+
+  useEffect(() => {
+    let wheelTimeout: ReturnType<typeof setTimeout> | null = null;
+    
+    const handleWheel = (e: WheelEvent) => {
+      if (isScrollingRef.current) return;
+      if (window.scrollY > 50) return;
+      
+      if (e.deltaY > 0) {
+        if (wheelTimeout) {
+          clearTimeout(wheelTimeout);
+        }
+        
+        wheelTimeout = setTimeout(() => {
+          scrollToEducationPath();
+        }, 100);
+      }
+    };
+    
+    window.addEventListener('wheel', handleWheel, { passive: true });
+    
+    return () => {
+      window.removeEventListener('wheel', handleWheel);
+      if (wheelTimeout) {
+        clearTimeout(wheelTimeout);
+      }
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, []);
+
   return (
     <div 
       ref={containerRef}
@@ -482,14 +563,18 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
       <div className="absolute inset-0 pointer-events-none z-20 opacity-5"
            style={{ background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(34, 197, 94, 0.1) 2px, rgba(34, 197, 94, 0.1) 4px)' }} />
 
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-30 pointer-events-none">
-        <div className="scroll-indicator">
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-30">
+        <div 
+          className="scroll-indicator"
+          onClick={scrollToEmploymentPath}
+          style={{ cursor: 'pointer', pointerEvents: 'auto' }}
+        >
           <svg 
-            width="32" 
-            height="32" 
+            width="45" 
+            height="45" 
             viewBox="0 0 24 24" 
             fill="none" 
-            stroke="rgba(34, 197, 94, 0.8)" 
+            stroke="white" 
             strokeWidth="2" 
             strokeLinecap="round" 
             strokeLinejoin="round"

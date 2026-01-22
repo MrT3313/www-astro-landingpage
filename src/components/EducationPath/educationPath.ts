@@ -54,7 +54,7 @@ export const pathData: PathNode[] = [
         institution: 'IU Bloomington',
         degree: 'Graduate School',
         field: 'Data Science',
-        year: '2025 - Current',
+        year: 'Current',
         position: 'left'
     }
 ];
