@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import MockTerminal from './MockTerminal.jsx';
-import { AStarSearch } from '../algorithms/search/index.js';
+import { AStarSearch } from '../../algorithms/search/index';
 
 export default function LandingPage({ debug = false, searchAlgorithm = AStarSearch }) {
   const containerRef = useRef(null);
