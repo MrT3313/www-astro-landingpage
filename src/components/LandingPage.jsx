@@ -181,7 +181,7 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
     if (debug) console.log('🔵 SETUP: Generating grid...');
 
     // Calculate terminal bounds FIRST, synchronously
-    let terminalCols = Math.floor(grid.cols * 0.7);
+    let terminalCols = Math.floor(grid.cols * 0.5);
     const terminalRows = Math.min(Math.floor(grid.rows * 0.40), 10);
     
     const totalSpacing = grid.cols - terminalCols;

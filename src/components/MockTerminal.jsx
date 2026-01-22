@@ -1,51 +1,56 @@
 import React, { useState, useEffect } from 'react';
 
+const TITLES = [
+  "Senior Full Stack Software Engineer ",
+  "Tech Stack Optimizer ",
+  "Eagle Scout ",
+  "Data Science Grad Student @ IU Bloomington ",
+  "Pickleballer ",
+  "Finance Undergraduate @ Babson College ",
+  "Startup Survivor ",
+  "Boston Native ",
+  "Finance-to-Tech Convert ",
+  "8-State Nomad ",
+];
+
 function RotatingTitle({ cellWidth, terminalWidth }) {
-  const titles = [
-    "Senior Full Stack Software Engineer",
-    "Builder",
-    "Eagle Scout",
-    "Explorer",
-  ];
-  
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [displayText, setDisplayText] = useState("");
+  const [isTyping, setIsTyping] = useState(true);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % titles.length);
-    }, 4000);
-
-    return () => clearInterval(interval);
-  }, [titles.length]);
-
-  const nextIndex = (currentIndex + 1) % titles.length;
+    const targetText = TITLES[currentIndex];
+    
+    if (isTyping) {
+      if (displayText.length < targetText.length) {
+        const timeout = setTimeout(() => {
+          setDisplayText(targetText.slice(0, displayText.length + 1));
+        }, 50);
+        return () => clearTimeout(timeout);
+      } else {
+        const timeout = setTimeout(() => {
+          setIsTyping(false);
+        }, 3000);
+        return () => clearTimeout(timeout);
+      }
+    } else {
+      if (displayText.length > 0) {
+        const timeout = setTimeout(() => {
+          setDisplayText(displayText.slice(0, -1));
+        }, 30);
+        return () => clearTimeout(timeout);
+      } else {
+        setCurrentIndex((prev) => (prev + 1) % TITLES.length);
+        setIsTyping(true);
+      }
+    }
+  }, [displayText, isTyping, currentIndex]);
 
   return (
-    <div className="relative w-full h-full overflow-hidden">
-      <p 
-        key={`current-${currentIndex}`}
-        className="text-green-300/80 tracking-wide absolute w-full animate-slideDown"
-        style={{ 
-          fontSize: `clamp(0.875rem, ${terminalWidth * cellWidth * 0.025}px, 1.125rem)`,
-          top: 0,
-          left: 0
-        }}
-      >
-        {titles[currentIndex]}
-      </p>
-      
-      <p 
-        key={`next-${nextIndex}`}
-        className="text-green-300/80 tracking-wide absolute w-full animate-slideDownIn"
-        style={{ 
-          fontSize: `clamp(0.875rem, ${terminalWidth * cellWidth * 0.025}px, 1.125rem)`,
-          top: 0,
-          left: 0
-        }}
-      >
-        {titles[nextIndex]}
-      </p>
-    </div>
+    <p className="text-green-300/80 tracking-wide text-lg">
+      {displayText}
+      <span className="animate-pulse">▌</span>
+    </p>
   );
 }
 
@@ -75,7 +80,7 @@ export default function MockTerminal({ terminalBounds, cellWidth, cellHeight }) 
             </div>
           </div>
 
-          <div className="flex-1 px-8 py-6 overflow-hidden flex flex-col justify-center">
+          <div className="flex-1 px-8 py-6 flex flex-col justify-start">
             <div className="space-y-6">
               <div className="space-y-0">
                 <div className="text-green-500 text-sm opacity-70">$ whoami</div>
@@ -90,15 +95,10 @@ export default function MockTerminal({ terminalBounds, cellWidth, cellHeight }) 
               
               <div className="space-y-1">
                 <div className="text-green-500 text-sm opacity-70">$ reedturgeon --title</div>
-                <div className="relative overflow-hidden"
-                     style={{ 
-                       height: `clamp(1.25rem, ${terminalBounds.width * cellWidth * 0.025}px, 1.625rem)`
-                     }}>
-                  <RotatingTitle cellWidth={cellWidth} terminalWidth={terminalBounds.width} />
-                </div>
+                <RotatingTitle cellWidth={cellWidth} terminalWidth={terminalBounds.width} />
               </div>
               
-              <div className="space-y-1">
+              {/* <div className="space-y-1">
                 <div className="text-green-500 text-sm opacity-70">$ skills</div>
                 <div className="flex flex-wrap gap-3">
                   {['Node.js', 'Python', 'Go', 'AWS', 'Docker', 'Kubernetes'].map((skill) => (
@@ -114,31 +114,12 @@ export default function MockTerminal({ terminalBounds, cellWidth, cellHeight }) 
                     </span>
                   ))}
                 </div>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>
       </div>
       
-      <style>{`
-        @keyframes slideDown {
-          from { transform: translateY(0); opacity: 1; }
-          to { transform: translateY(100%); opacity: 0; }
-        }
-        
-        @keyframes slideDownIn {
-          from { transform: translateY(-100%); opacity: 0; }
-          to { transform: translateY(0); opacity: 1; }
-        }
-        
-        .animate-slideDown {
-          animation: slideDown 0.5s ease-in-out forwards;
-        }
-        
-        .animate-slideDownIn {
-          animation: slideDownIn 0.5s ease-in-out forwards;
-        }
-      `}</style>
     </>
   );
 }
