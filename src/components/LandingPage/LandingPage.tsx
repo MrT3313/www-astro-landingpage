@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import MockTerminal from './MockTerminal';
 import { AStarSearch } from '../../algorithms/search/index';
+import { calculateTerminalBounds } from './utils/terminalSizing';
 import type { Node, Grid, Wall } from '../../algorithms/search/types/index';
 
 interface LandingPageProps {
@@ -48,7 +49,7 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
       const height = window.innerHeight;
       setDimensions({ width, height });
 
-      const targetCellSize = width < 768 ? 30 : width < 1200 ? 35 : 40;
+      const targetCellSize = 25
       const cols = Math.floor(width / targetCellSize);
       const rows = Math.floor(height / targetCellSize);
       
@@ -136,23 +137,7 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
   // Calculate terminal bounds
   useEffect(() => {
     if (grid.cols > 0 && grid.rows > 0) {
-      let terminalCols = Math.floor(grid.cols * 0.7);
-      const terminalRows = Math.min(Math.floor(grid.rows * 0.40), 10);
-      
-      const totalSpacing = grid.cols - terminalCols;
-      if (totalSpacing % 2 !== 0) {
-        terminalCols = terminalCols - 1;
-      }
-      
-      const startX = (grid.cols - terminalCols) / 2;
-      const startY = Math.floor((grid.rows - terminalRows) / 2);
-      
-      setTerminalBounds({
-        x: startX,
-        y: startY,
-        width: terminalCols,
-        height: terminalRows
-      });
+      setTerminalBounds(calculateTerminalBounds(grid, window.innerWidth));
     }
   }, [grid]);
 
@@ -187,23 +172,7 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
     if (debug) console.log('🔵 SETUP: Generating grid...');
 
     // Calculate terminal bounds FIRST, synchronously
-    let terminalCols = Math.floor(grid.cols * 0.5);
-    const terminalRows = Math.min(Math.floor(grid.rows * 0.40), 10);
-    
-    const totalSpacing = grid.cols - terminalCols;
-    if (totalSpacing % 2 !== 0) {
-      terminalCols = terminalCols - 1;
-    }
-    
-    const startX = (grid.cols - terminalCols) / 2;
-    const startY = Math.floor((grid.rows - terminalRows) / 2);
-    
-    const currentTerminalBounds = {
-      x: startX,
-      y: startY,
-      width: terminalCols,
-      height: terminalRows
-    };
+    const currentTerminalBounds = calculateTerminalBounds(grid, window.innerWidth);
     
     // Update terminal bounds state
     setTerminalBounds(currentTerminalBounds);

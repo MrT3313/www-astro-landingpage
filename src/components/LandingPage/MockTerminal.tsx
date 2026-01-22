@@ -63,74 +63,72 @@ interface MockTerminalProps {
   terminalBounds: { x: number; y: number; width: number; height: number };
   cellWidth: number;
   cellHeight: number;
+  debug?: boolean;
 }
 
-export default function MockTerminal({ terminalBounds, cellWidth, cellHeight }: MockTerminalProps) {
+export default function MockTerminal({ 
+  terminalBounds, 
+  cellWidth, 
+  cellHeight, 
+  debug = true 
+}: MockTerminalProps) {
   if (terminalBounds.width === 0) {
     return null;
   }
 
+  // Tailwind responsive border classes for debug mode
+  // xs: red, sm: orange, md: yellow, lg: green, xl: blue, 2xl: purple
+  const debugBorderClass = debug 
+    ? 'border-2 border-red-500 sm:border-orange-500 md:border-yellow-500 lg:border-green-500 xl:border-blue-500 2xl:border-purple-500'
+    : 'border border-green-500/30';
+
+  const debugDividerClass = debug
+    ? 'border-red-500 sm:border-orange-500 md:border-yellow-500 lg:border-green-500 xl:border-blue-500 2xl:border-purple-500'
+    : 'border-green-500/30';
+
   return (
-    <>
+    <div 
+      className="absolute z-10 transition-all duration-300"
+      style={{
+        left: `${terminalBounds.x * cellWidth}px`,
+        top: `${terminalBounds.y * cellHeight}px`,
+        width: `${terminalBounds.width * cellWidth}px`,
+        height: `${terminalBounds.height * cellHeight}px`,
+      }}
+    >
       <div 
-        className="absolute z-10 transition-all duration-300"
-        style={{
-          left: `${terminalBounds.x * cellWidth}px`,
-          top: `${terminalBounds.y * cellHeight}px`,
-          width: `${terminalBounds.width * cellWidth}px`,
-          height: `${terminalBounds.height * cellHeight}px`,
+        className={`w-full h-full bg-black/90 backdrop-blur-sm rounded-sm shadow-2xl flex flex-col overflow-hidden ${debugBorderClass}`}
+        style={{ 
+          boxShadow: '0 0 40px rgba(34, 197, 94, 0.2), inset 0 0 20px rgba(0, 0, 0, 0.5)',
         }}
       >
-        <div className="w-full h-full bg-black/90 backdrop-blur-sm border border-green-500/30 rounded-sm shadow-2xl flex flex-col overflow-hidden"
-             style={{ boxShadow: '0 0 40px rgba(34, 197, 94, 0.2), inset 0 0 20px rgba(0, 0, 0, 0.5)' }}>
-          <div className="flex items-center gap-2 px-4 py-3 border-b border-green-500/30 bg-black/50">
-            <div className="flex gap-2">
-              <div className="w-3 h-3 rounded-full bg-red-500"></div>
-              <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-              <div className="w-3 h-3 rounded-full bg-green-500"></div>
-            </div>
+        <div className={`flex items-center gap-2 px-4 py-3 bg-black/50 border-b ${debugDividerClass}`}>
+          <div className="flex gap-2">
+            <div className="w-3 h-3 rounded-full bg-red-500"></div>
+            <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+            <div className="w-3 h-3 rounded-full bg-green-500"></div>
           </div>
+        </div>
 
-          <div className="flex-1 px-8 py-6 flex flex-col justify-start">
-            <div className="space-y-6">
-              <div className="space-y-0">
-                <div className="text-green-500 text-sm opacity-70">$ whoami</div>
-                <h1 className="text-white font-bold tracking-tight leading-tight"
-                    style={{ 
-                      fontSize: `clamp(1.5rem, ${terminalBounds.width * cellWidth * 0.08}px, 3.5rem)`,
-                      textShadow: '0 0 20px rgba(34, 197, 94, 0.3)'
-                    }}>
-                  Reed Turgeon
-                </h1>
-              </div>
-              
-              <div className="space-y-1">
-                <div className="text-green-500 text-sm opacity-70">$ reedturgeon --title</div>
-                <RotatingTitle cellWidth={cellWidth} terminalWidth={terminalBounds.width} />
-              </div>
-              
-              {/* <div className="space-y-1">
-                <div className="text-green-500 text-sm opacity-70">$ skills</div>
-                <div className="flex flex-wrap gap-3">
-                  {['Node.js', 'Python', 'Go', 'AWS', 'Docker', 'Kubernetes'].map((skill) => (
-                    <span
-                      key={skill}
-                      className="px-4 py-2 border border-green-500/40 text-green-400 rounded-sm text-xs hover:bg-green-500/10 hover:border-green-500/60 transition-all duration-300 cursor-default"
-                      style={{
-                        fontSize: `clamp(0.625rem, ${terminalBounds.width * cellWidth * 0.018}px, 0.875rem)`,
-                        textShadow: '0 0 10px rgba(34, 197, 94, 0.2)'
-                      }}
-                    >
-                      {skill}
-                    </span>
-                  ))}
-                </div>
-              </div> */}
+        <div className="flex-1 pl-4 pr-4 flex flex-col justify-center">
+          <div className="space-y-3">
+            <div className="space-y-0">
+              <div className="text-green-500 text-sm opacity-70">$ whoami</div>
+              <h1 className="text-white font-bold tracking-tight leading-tight text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl"
+                  style={{ 
+                    textShadow: '0 0 20px rgba(34, 197, 94, 0.3)'
+                  }}>
+                Reed Turgeon
+              </h1>
+            </div>
+            
+            <div className="space-y-1">
+              <div className="text-green-500 text-sm opacity-70">$ reedturgeon --title</div>
+              <RotatingTitle cellWidth={cellWidth} terminalWidth={terminalBounds.width} />
             </div>
           </div>
         </div>
       </div>
-      
-    </>
+    </div>
   );
 }
