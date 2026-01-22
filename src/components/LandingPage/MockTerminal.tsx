@@ -70,7 +70,7 @@ export default function MockTerminal({
   terminalBounds, 
   cellWidth, 
   cellHeight, 
-  debug = true 
+  debug = false 
 }: MockTerminalProps) {
   if (terminalBounds.width === 0) {
     return null;
@@ -107,6 +107,9 @@ export default function MockTerminal({
             <div className="w-3 h-3 rounded-full bg-red-500"></div>
             <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
             <div className="w-3 h-3 rounded-full bg-green-500"></div>
+          </div>
+          <div className="ml-auto">
+            <span className="text-slate-400 text-sm font-mono italic tracking-wide">Site Under Construction</span>
           </div>
         </div>
 
