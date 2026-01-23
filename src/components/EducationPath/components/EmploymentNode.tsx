@@ -24,17 +24,28 @@ const EmploymentNode: React.FC<EmploymentNodeProps> = ({ node, index, onMouseEnt
           {node.roles.map((role, roleIndex) => (
             <div key={roleIndex} className="bg-[#1a1a1a] border border-[#2a2a2a] border-l-2 border-l-[#555] p-3 rounded transition-all duration-200 hover:border-l-[#00ff41] hover:bg-[#1f1f1f] hover:translate-x-[3px] role-card">
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-5 h-5 bg-[rgba(0,255,65,0.1)] rounded-full flex items-center justify-center">
-                  {role.title.includes('Director') || role.title.includes('Lead') ? 
-                    <TrendingUp className="text-[#00ff41] w-3 h-3" /> : 
-                    role.company === 'Studios' ? <Code className="text-[#00ff41] w-3 h-3" /> : <Briefcase className="text-[#00ff41] w-3 h-3" />
-                  }
+                <div className="w-8 h-8 bg-[rgba(0,255,65,0.1)] border border-[rgba(0,255,65,0.3)] rounded flex items-center justify-center">
+                  <Briefcase className="text-[#00ff41] w-[18px] h-[18px]" />
                 </div>
-                <div className="text-[13px] font-bold text-white font-['Space_Mono',monospace]">{role.company}</div>
+                <div>
+                  <div className="text-base font-bold text-white font-['Space_Mono',monospace]">{role.company}</div>
+                  {role.company_subtitle && (
+                    <div className="text-xs text-[#888] italic font-light mt-0.5">{role.company_subtitle}</div>
+                  )}
+                </div>
               </div>
-              <div className="text-[11px] text-[#888] mb-1 font-normal">{role.title}</div>
-              {role.highlight && (
-                <div className="text-[10px] text-[#00ff41] font-light opacity-80">// {role.highlight}</div>
+              <div className="text-xs text-[#888] mb-1 font-normal">{role.title}</div>
+              {role.summary && role.summary.length > 0 && (
+                <div className="flex flex-col gap-1">
+                  {role.summary.map((item, summaryIndex) => (
+                    <div key={summaryIndex} className="text-[10px] text-[#00ff41] font-light opacity-80">&gt; {item}</div>
+                  ))}
+                </div>
+              )}
+              {role.industry && (
+                <div className="mt-2 pt-2 border-t border-[#2a2a2a] text-xs text-[#aaa] font-light leading-relaxed">
+                  {role.industry}
+                </div>
               )}
             </div>
           ))}

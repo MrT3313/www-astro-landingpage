@@ -152,20 +152,6 @@ const EducationPath = () => {
           border-left-width: 5px;
         }
 
-        .node-wrapper:last-child .education-node {
-          border-left-color: #00ff41;
-          animation: currentPulse 2s ease-in-out infinite;
-        }
-
-        @keyframes currentPulse {
-          0%, 100% {
-            box-shadow: 0 4px 20px rgba(0, 255, 65, 0.2);
-          }
-          50% {
-            box-shadow: 0 4px 30px rgba(0, 255, 65, 0.4);
-          }
-        }
-
         .node-wrapper:last-child .year-badge {
           background: rgba(0, 255, 65, 0.2);
           border-color: #00ff41;
