@@ -1,49 +1,103 @@
 import React from 'react';
-import { TrendingUp, Code, Briefcase } from 'lucide-react';
+import { Briefcase } from 'lucide-react';
 import type { EmploymentNode } from '../types/index';
+import cx from 'classnames';
 
 interface EmploymentNodeProps {
   node: EmploymentNode;
   index: number;
-  onMouseEnter: () => void;
-  onMouseLeave: () => void;
 }
 
-const EmploymentNode: React.FC<EmploymentNodeProps> = ({ node, index, onMouseEnter, onMouseLeave }) => {
+const EmploymentNode: React.FC<EmploymentNodeProps> = ({ node, index }) => {
   return (
     <div 
-      className={`relative flex items-center my-[30px] md:my-5 z-[2] node-wrapper ${node.position === 'left' ? 'justify-center md:justify-start pr-0 md:pr-[55%]' : 'justify-center md:justify-end pl-0 md:pl-[55%]'}`}
+      className={cx(
+        `relative flex items-center justify-center w-full`, 
+        `my-[30px] md:my-5 z-[2] node-wrapper`, 
+        node.position === 'left'
+          ? 'md:justify-end md:pr-[calc(50%+60px)]'
+          : 'md:justify-start md:pl-[calc(50%+60px)]',
+      )}
       data-node-type="employment"
       data-node-index={index}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
     >
-      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-[#1a1a1a] border-2 border-[#00ff41] rounded-full z-[3] shadow-[0_0_10px_rgba(0,255,65,0.5)] hidden md:block center-dot" />
-      <div className="bg-gradient-to-br from-[#151515] to-[#0a0a0a] border border-[#2a2a2a] p-4 rounded transition-all duration-300 cursor-pointer relative w-80 min-w-80 max-w-80 hover:border-[#00ff41] hover:shadow-[0_6px_30px_rgba(0,255,65,0.15)] employment-node">
-        <div className="grid grid-cols-1 md:grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-2.5 w-full roles-grid">
+      {/* Timeline Dot */}
+      <div className={cx(
+        "absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2", 
+        "w-3 h-3 rounded-full z-[3]", 
+        "bg-[var(--color-dot-bg)]", 
+        "border-2 border-[var(--color-dot-border)]", 
+        "shadow-[0_0_10px_var(--color-dot-shadow)]", 
+        "hidden md:block center-dot",
+      )}/>
+
+      {/* Container */}
+      <div className={cx(
+        "employment-node relative",
+        "bg-gradient-to-br from-[var(--color-container-bg-from)] to-[var(--color-container-bg-to)]",  
+        "w-auto min-w-80 max-w-[700px] p-4 rounded", 
+        "border border-[var(--color-container-border)]", 
+        "transition-all duration-300 cursor-pointer", 
+        "hover:border-[var(--color-container-border-hover)]",
+        "hover:shadow-[0_6px_30px_var(--color-container-shadow-hover)]",
+      )}>
+        {/* Roles Grid */}
+        <div className={cx(
+          "roles-grid grid grid-cols-1 w-full gap-2.5", 
+        )}>
           {node.roles.map((role, roleIndex) => (
-            <div key={roleIndex} className="bg-[#1a1a1a] border border-[#2a2a2a] border-l-2 border-l-[#555] p-3 rounded transition-all duration-200 hover:border-l-[#00ff41] hover:bg-[#1f1f1f] hover:translate-x-[3px] role-card">
+            <div key={roleIndex} className={cx(
+              "role-card p-3 rounded transition-all duration-200",
+              "bg-[var(--color-node-bg)]", 
+              "border border-[var(--color-node-border)]",
+              "border-l-2 border-l-[var(--color-node-border-left)]", 
+              "hover:border-l-[var(--color-node-border-left-hover)]",
+              "hover:bg-[var(--color-node-bg-hover)]",
+              "hover:translate-x-[3px]", 
+            )}>
+              {/* Role Header */}
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-8 h-8 bg-[rgba(0,255,65,0.1)] border border-[rgba(0,255,65,0.3)] rounded flex items-center justify-center">
-                  <Briefcase className="text-[#00ff41] w-[18px] h-[18px]" />
+                <div className={cx(
+                  "flex items-center justify-center w-8 h-8 rounded", 
+                  "bg-icon-bg border border-icon", 
+                )}>
+                  <Briefcase className="text-icon-color w-[18px] h-[18px]" />
                 </div>
                 <div>
-                  <div className="text-base font-bold text-white font-['Space_Mono',monospace]">{role.company}</div>
+                  <div className="text-base font-bold text-white font-['Space_Mono',monospace]">
+                    {role.company}
+                  </div>
                   {role.company_subtitle && (
-                    <div className="text-xs text-[#888] italic font-light mt-0.5">{role.company_subtitle}</div>
+                    <div className="text-xs text-text-dark-grey italic mt-0.5">
+                      {role.company_subtitle}
+                    </div>
                   )}
                 </div>
               </div>
-              <div className="text-xs text-[#888] mb-1 font-normal">{role.title}</div>
+
+              {/* Role Title */}
+              <div className="text-sm text-text-light-grey mb-1 font-normal">
+                {role.title}
+              </div>
+
+              {/* Summary Points */}
               {role.summary && role.summary.length > 0 && (
                 <div className="flex flex-col gap-1">
                   {role.summary.map((item, summaryIndex) => (
-                    <div key={summaryIndex} className="text-[10px] text-[#00ff41] font-light opacity-80">&gt; {item}</div>
+                    <div key={summaryIndex} className="text-sm text-text-neon-green">
+                      &gt; {item}
+                    </div>
                   ))}
                 </div>
               )}
+
+              {/* Industry Footer */}
               {role.industry && (
-                <div className="mt-2 pt-2 border-t border-[#2a2a2a] text-xs text-[#aaa] font-light leading-relaxed">
+                <div className={cx(
+                  "mt-2 pt-2 text-sm leading-relaxed",
+                  "border-t border-[var(--color-node-border)]",
+                  "text-text-light-grey",
+                )}>
                   {role.industry}
                 </div>
               )}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import cx from 'classnames';
 
 const TITLES = [
   "Senior Full Stack Software Engineer ",
@@ -52,7 +53,7 @@ function RotatingTitle({ cellWidth, terminalWidth }: RotatingTitleProps) {
   }, [displayText, isTyping, currentIndex]);
 
   return (
-    <p className="text-green-300/80 tracking-wide text-lg">
+    <p className={cx("tracking-wide text-lg", "text-terminal-output")}>
       {displayText}
       <span className="animate-pulse">▌</span>
     </p>
@@ -80,15 +81,15 @@ export default function MockTerminal({
   // xs: red, sm: orange, md: yellow, lg: green, xl: blue, 2xl: purple
   const debugBorderClass = debug 
     ? 'border-2 border-red-500 sm:border-orange-500 md:border-yellow-500 lg:border-green-500 xl:border-blue-500 2xl:border-purple-500'
-    : 'border border-green-500/30';
+    : 'border border-mock-terminal-border';
 
   const debugDividerClass = debug
     ? 'border-red-500 sm:border-orange-500 md:border-yellow-500 lg:border-green-500 xl:border-blue-500 2xl:border-purple-500'
-    : 'border-green-500/30';
+    : 'border-mock-terminal-border';
 
   return (
     <div 
-      className="absolute z-10 transition-all duration-300"
+      className="absolute z-10 transition-all duration-300 bg-black"
       style={{
         left: `${terminalBounds.x * cellWidth}px`,
         top: `${terminalBounds.y * cellHeight}px`,
@@ -97,12 +98,23 @@ export default function MockTerminal({
       }}
     >
       <div 
-        className={`w-full h-full bg-black/90 backdrop-blur-sm rounded-sm shadow-2xl flex flex-col overflow-hidden ${debugBorderClass}`}
+        className={cx(
+          `flex flex-col`, 
+          `w-full h-full`, 
+          `rounded-sm`,
+          `overflow-hidden`,
+          `${debugBorderClass}`
+        )}
         style={{ 
-          boxShadow: '0 0 40px rgba(34, 197, 94, 0.2), inset 0 0 20px rgba(0, 0, 0, 0.5)',
+          boxShadow: '0 0 20px var(--color-mock-terminal-shadow)',
         }}
       >
-        <div className={`flex items-center gap-2 px-4 py-3 bg-black/50 border-b ${debugDividerClass}`}>
+        <div className={cx(
+          `flex`, 
+          `items-center gap-2`, 
+          `px-4 py-3`, 
+          `border-b ${debugDividerClass}`
+        )}>
           <div className="flex gap-2">
             <div className="w-3 h-3 rounded-full bg-red-500"></div>
             <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
@@ -113,20 +125,17 @@ export default function MockTerminal({
           </div>
         </div>
 
-        <div className="flex-1 pl-4 pr-4 flex flex-col justify-center">
+        <div className={cx("flex flex-col flex-1", "justify-center", "pl-4 pr-4",)}>
           <div className="space-y-3">
             <div className="space-y-0">
-              <div className="text-green-500 text-sm opacity-70">$ whoami</div>
-              <h1 className="text-white font-bold tracking-tight leading-tight text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl"
-                  style={{ 
-                    textShadow: '0 0 20px rgba(34, 197, 94, 0.3)'
-                  }}>
+              <div className="text-terminal-command text-sm">$ whoami</div>
+              <h1 className="text-white font-bold tracking-tight leading-tight text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl">
                 Reed Turgeon
               </h1>
             </div>
             
             <div className="space-y-1">
-              <div className="text-green-500 text-sm opacity-70">$ reedturgeon --title</div>
+              <div className="text-terminal-command text-sm">$ reedturgeon --title</div>
               <RotatingTitle cellWidth={cellWidth} terminalWidth={terminalBounds.width} />
             </div>
           </div>

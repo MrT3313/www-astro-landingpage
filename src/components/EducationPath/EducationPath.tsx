@@ -1,12 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Terminal } from 'lucide-react';
+import cx from 'classnames';
 
 import { pathData } from './educationPath';
 import EducationNode from './components/EducationNode';
 import EmploymentNode from './components/EmploymentNode';
 
 const EducationPath = () => {
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [linePositions, setLinePositions] = useState<Array<{ y1: number; y2: number }>>([]);
   const journeyPathRef = useRef<HTMLDivElement>(null);
 
@@ -44,7 +43,7 @@ const EducationPath = () => {
   }, []);
 
   return (
-    <div className="relative w-full min-h-screen min-w-full bg-[#0a0a0a] overflow-hidden py-10 px-5 md:py-[60px] md:px-10 font-['JetBrains_Mono',monospace] path-container" id="education-path-container">
+    <div className="relative w-full min-h-screen min-w-full bg-[#0a0a0a] overflow-hidden font-['JetBrains_Mono',monospace] path-container flex flex-col" id="education-path-container">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap');
 
@@ -168,17 +167,23 @@ const EducationPath = () => {
         }
       `}</style>
 
-      <div className="absolute top-5 left-5 md:left-10 z-10">
+      <div className="flex-shrink-0 px-5 pt-5 pb-0 z-10">
         <div className="space-y-3">
-          <div className="text-sm text-green-500 opacity-70 font-['JetBrains_Mono',monospace]">$ reedturgeon --linkedin</div>
-          <div className="pl-4 text-sm text-green-300/80 font-['JetBrains_Mono',monospace]">
-            <a href="https://www.linkedin.com/in/reedturgeon" target="_blank" rel="noopener noreferrer" className="inline-block underline hover:opacity-100 transition-opacity">https://www.linkedin.com/in/reedturgeon/</a>
+          <div className="text-sm text-terminal-command font-['JetBrains_Mono',monospace] break-words">
+            $ reedturgeon --linkedin
           </div>
-          <div className="text-sm text-green-500 opacity-70 font-['JetBrains_Mono',monospace]">$ cat ~/journey/education-and-employment.log</div>
+          <div className="pl-4 text-sm text-terminal-output font-['JetBrains_Mono',monospace] break-words">
+            <a href="https://www.linkedin.com/in/reedturgeon" target="_blank" rel="noopener noreferrer" className="underline hover:opacity-100 transition-opacity break-words">
+              https://www.linkedin.com/in/reedturgeon
+            </a>
+          </div>
+          <div className="text-sm text-terminal-command font-['JetBrains_Mono',monospace] break-words">
+            $ cat ~/journey/education-and-employment.log
+          </div>
         </div>
       </div>
 
-      <div className="relative w-full max-w-[900px] mx-auto journey-path pt-10" ref={journeyPathRef}>
+      <div className="relative w-full mx-auto flex-grow px-5 md:px-10 pb-10" ref={journeyPathRef}>
         <svg className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full pointer-events-none z-[1] path-svg" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <filter id="glow">
@@ -221,8 +226,6 @@ const EducationPath = () => {
                 node={node}
                 index={index}
                 isLast={isLast}
-                onMouseEnter={() => setHoveredIndex(index)}
-                onMouseLeave={() => setHoveredIndex(null)}
               />
             );
           } else {
@@ -231,8 +234,6 @@ const EducationPath = () => {
                 key={index}
                 node={node}
                 index={index}
-                onMouseEnter={() => setHoveredIndex(index)}
-                onMouseLeave={() => setHoveredIndex(null)}
               />
             );
           }
