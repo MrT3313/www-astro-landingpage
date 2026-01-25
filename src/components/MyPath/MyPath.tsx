@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import cx from 'classnames';
 
-import { pathData } from './educationPath';
+import { pathData } from './myPath';
 import EducationNode from './components/EducationNode';
 import EmploymentNode from './components/EmploymentNode';
 
