@@ -27,7 +27,7 @@ export const pathData: PathNode[] = [
         type: 'education',
         institution: 'Lambda School',
         institute_subtitle: 'now Bloom Tech',
-        degree: 'Full Stack Development',
+        degree: 'Full Stack Web Development',
         field: 'Certificate',
         position: 'left'
     },
@@ -76,10 +76,18 @@ export const pathData: PathNode[] = [
     },
     {
         type: 'education',
+        institution: 'Aitra',
+        institute_subtitle: 'now Gauntlet AI',
+        degree: 'AI Engineering',
+        field: 'Certificate',
+        position: 'left'
+    },
+    {
+        type: 'education',
         institution: 'Indiana University Bloomington',
         degree: 'Graduate School',
         field: 'MS in Data Science',
         year: 'Current',
         position: 'left'
-    }
+    },
 ];
