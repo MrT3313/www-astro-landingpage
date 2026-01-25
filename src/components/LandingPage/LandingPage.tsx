@@ -3,7 +3,7 @@ import MockTerminal from './MockTerminal';
 import { AStarSearch } from '../../algorithms/search/index';
 import { calculateTerminalBounds } from './utils/terminalSizing';
 import type { Node, Grid, Wall } from '../../algorithms/search/types/index';
-
+import cx from 'classnames';
 interface LandingPageProps {
   debug?: boolean;
   searchAlgorithm?: typeof AStarSearch;
@@ -12,7 +12,6 @@ interface LandingPageProps {
 export default function LandingPage({ debug = false, searchAlgorithm = AStarSearch }: LandingPageProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-  const [cellSize, setCellSize] = useState(40);
   const [cellWidth, setCellWidth] = useState(40);
   const [cellHeight, setCellHeight] = useState(40);
   const [grid, setGrid] = useState<Grid>({ cols: 0, rows: 0 });
@@ -42,6 +41,10 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
   const [isResizing, setIsResizing] = useState(false);
   const initialDimensionsRef = useRef({ width: 0, height: 0 });
 
+  // Scroll handling
+  const isScrollingRef = useRef(false);
+  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // Calculate grid dimensions
   const updateDimensions = () => {
     if (containerRef.current) {
@@ -59,7 +62,6 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
       
       setCellWidth(cWidth);
       setCellHeight(cHeight);
-      setCellSize(cWidth); // Keep for backwards compatibility
       setGrid({ cols, rows });
       
       return { width, height };
@@ -141,24 +143,8 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
     }
   }, [grid]);
 
-  const isInTerminal = (x: number, y: number) => {
-    return x >= terminalBounds.x && x < terminalBounds.x + terminalBounds.width &&
-           y >= terminalBounds.y && y < terminalBounds.y + terminalBounds.height;
-  };
-
   const isWall = (x: number, y: number, walls: Wall[]) => {
     return walls.some(([wx, wy]: Wall) => wx === x && wy === y);
-  };
-
-  const getRandomPoint = (walls: Wall[]) => {
-    let x, y;
-    let attempts = 0;
-    do {
-      x = Math.floor(Math.random() * grid.cols);
-      y = Math.floor(Math.random() * grid.rows);
-      attempts++;
-    } while ((isInTerminal(x, y) || isWall(x, y, walls)) && attempts < 1000);
-    return { x, y };
   };
 
   // SETUP - only runs once when grid is ready
@@ -343,11 +329,69 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
     return () => clearTimeout(timer);
   }, [phase, isResizing]);
 
+  const scrollToEducationPath = () => {
+    if (isScrollingRef.current) return;
+    
+    const educationPathContainer = document.getElementById('education-path-container');
+    if (!educationPathContainer) return;
+    
+    isScrollingRef.current = true;
+    const rect = educationPathContainer.getBoundingClientRect();
+    const targetScrollY = rect.top + window.scrollY;
+    
+    window.scrollTo({
+      top: targetScrollY,
+      behavior: 'smooth'
+    });
+    
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
+    scrollTimeoutRef.current = setTimeout(() => {
+      isScrollingRef.current = false;
+    }, 1000);
+  };
+
+  useEffect(() => {
+    let wheelTimeout: ReturnType<typeof setTimeout> | null = null;
+    
+    const handleWheel = (e: WheelEvent) => {
+      if (isScrollingRef.current) return;
+      if (window.scrollY > 50) return;
+      
+      if (e.deltaY > 0) {
+        if (wheelTimeout) {
+          clearTimeout(wheelTimeout);
+        }
+        
+        wheelTimeout = setTimeout(() => {
+          scrollToEducationPath();
+        }, 100);
+      }
+    };
+    
+    window.addEventListener('wheel', handleWheel, { passive: true });
+    
+    return () => {
+      window.removeEventListener('wheel', handleWheel);
+      if (wheelTimeout) {
+        clearTimeout(wheelTimeout);
+      }
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, []);
+
   return (
     <div 
       ref={containerRef}
-      className="relative w-screen h-screen overflow-hidden bg-black"
-      style={{ fontFamily: "'IBM Plex Mono', 'Courier New', monospace" }}
+      className="relative overflow-hidden bg-black"
+      style={{ 
+        fontFamily: "'IBM Plex Mono', 'Courier New', monospace",
+        width: '100vw',
+        height: '100vh'
+      }}
     >
       <div className="absolute inset-0">
         <svg 
@@ -362,7 +406,7 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
               <path 
                 d={`M ${cellWidth} 0 L 0 0 0 ${cellHeight}`} 
                 fill="none" 
-                stroke="rgba(100, 116, 139, 0.4)" 
+                stroke="var(--color-grid-border)"
                 strokeWidth="1"
               />
             </pattern>
@@ -377,7 +421,7 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
               y={y * cellHeight}
               width={cellWidth}
               height={cellHeight}
-              fill="rgba(71, 85, 105, 0.65)"
+              fill="var(--color-grid-fill)"
               className="transition-all duration-300"
               style={{ opacity: isWiping ? 0 : 1 }}
             />
@@ -396,8 +440,8 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
                 y={node.y * cellHeight + cellHeight * 0.1}
                 width={cellWidth * 0.8}
                 height={cellHeight * 0.8}
-                fill="rgba(34, 197, 94, 0.35)"
-                stroke="rgba(34, 197, 94, 0.6)"
+                fill="var(--color-grid-cell-resting)"
+                stroke="var(--color-grid-cell-selected)"
                 strokeWidth="1.5"
                 rx="2"
                 className="searched-node"
@@ -416,8 +460,8 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
                 cx={startPoint.x * cellWidth + cellWidth / 2}
                 cy={startPoint.y * cellHeight + cellHeight / 2}
                 r={Math.min(cellWidth, cellHeight) / 2.5}
-                fill="rgba(59, 130, 246, 0.6)"
-                stroke="rgba(59, 130, 246, 1)"
+                fill="var(--color-grid-start-cell-fill)"
+                stroke="var(--color-grid-start-cell-border)"
                 strokeWidth="2"
               />
             </g>
@@ -430,8 +474,8 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
                 cx={endPoint.x * cellWidth + cellWidth / 2}
                 cy={endPoint.y * cellHeight + cellHeight / 2}
                 r={Math.min(cellWidth, cellHeight) / 2.5}
-                fill="rgba(168, 85, 247, 0.6)"
-                stroke="rgba(168, 85, 247, 1)"
+                fill="var(--color-grid-end-cell-fill)"
+                stroke="var(--color-grid-end-cell-border)"
                 strokeWidth="2"
               />
             </g>
@@ -450,8 +494,8 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
                 y={node.y * cellHeight + cellHeight * 0.1}
                 width={cellWidth * 0.8}
                 height={cellHeight * 0.8}
-                fill="rgba(234, 179, 8, 0.7)"
-                stroke="rgba(250, 204, 21, 1)"
+                fill="var(--color-grid-cell-path-resting)"
+                stroke="var(--color-grid-cell-path-selected)"
                 strokeWidth="2"
                 rx="2"
                 className="path-node"
@@ -475,11 +519,39 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
         cellHeight={cellHeight} 
       />
 
-      <div className="absolute inset-0 pointer-events-none z-20 opacity-5"
-           style={{ background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(34, 197, 94, 0.1) 2px, rgba(34, 197, 94, 0.1) 4px)' }} />
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-30">
+        <div 
+          className="scroll-indicator"
+          onClick={scrollToEducationPath}
+          style={{ cursor: 'pointer', pointerEvents: 'auto' }}
+        >
+          <svg 
+            width="45" 
+            height="45" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="white" 
+            strokeWidth="2" 
+            strokeLinecap="round" 
+            strokeLinejoin="round"
+            className="scroll-arrow"
+          >
+            <path d="M12 5v14M19 12l-7 7-7-7" />
+          </svg>
+        </div>
+      </div>
 
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&display=swap');
+        
+        html, body {
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+        
+        html::-webkit-scrollbar, body::-webkit-scrollbar {
+          display: none;
+        }
         
         @keyframes wipeOut {
           0% { clip-path: circle(0% at 50% 50%); }
@@ -488,30 +560,45 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
         
         @keyframes searchFade {
           0% {
-            fill: rgba(34, 197, 94, 0.9);
-            stroke: rgba(34, 197, 94, 1);
+            fill: var(--color-grid-cell-resting);
+            stroke: var(--color-grid-cell-selected);
             filter: brightness(1.5);
           }
           100% {
-            fill: rgba(34, 197, 94, 0.35);
-            stroke: rgba(34, 197, 94, 0.6);
+            fill: var(--color-grid-cell-resting);
+            stroke: var(--color-grid-cell-selected);
             filter: brightness(1);
           }
         }
         
         @keyframes pathPulse {
           0%, 100% {
-            fill: rgba(234, 179, 8, 0.7);
-            stroke: rgba(250, 204, 21, 1);
+            fill: var(--color-grid-cell-path-resting);
+            stroke: var(--color-grid-cell-path-selected);
             filter: brightness(1);
             transform: scale(1);
           }
           50% {
-            fill: rgba(234, 179, 8, 0.95);
-            stroke: rgba(250, 204, 21, 1);
+            fill: var(--color-grid-cell-path-resting);
+            stroke: var(--color-grid-cell-path-selected);
             filter: brightness(1.3) drop-shadow(0 0 8px rgba(250, 204, 21, 0.8));
             transform: scale(1.05);
           }
+        }
+        
+        @keyframes bounceArrow {
+          0%, 100% {
+            transform: translateY(0);
+            opacity: 0.8;
+          }
+          50% {
+            transform: translateY(8px);
+            opacity: 1;
+          }
+        }
+        
+        .scroll-indicator {
+          animation: bounceArrow 2s ease-in-out infinite;
         }
         
         .path-node {
