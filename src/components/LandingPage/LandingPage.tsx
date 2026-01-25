@@ -139,8 +139,11 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
           setIsWiping(false);
           setCurrentSearchIndex(0);
           setCurrentPathIndex(0);
-          allSearchStepsRef.current = [];
-          allPathNodesRef.current = [];
+          
+          // FIX: Do NOT clear refs here. It causes race conditions if the animation loop
+          // runs one last time before the state updates.
+          // allSearchStepsRef.current = [];
+          // allPathNodesRef.current = [];
         }, 500);
       }
     };
@@ -151,7 +154,7 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
       window.removeEventListener('resize', handleResize);
       if (resizeTimeout) clearTimeout(resizeTimeout);
     };
-  }, [isResizing]);
+  }, [isResizing, debug]);
 
   // Calculate terminal bounds
   useEffect(() => {
@@ -173,6 +176,10 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
     
     hasStartedRef.current = true;
     if (debug) console.log('🔵 SETUP: Generating grid...');
+
+    // FIX: Clear refs HERE, synchronously, before generating new data.
+    allSearchStepsRef.current = [];
+    allPathNodesRef.current = [];
 
     // 1. Calculate terminal bounds
     const currentTerminalBounds = calculateTerminalBounds(grid, window.innerWidth);
@@ -223,11 +230,6 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
             y
           });
           
-          // Add these coordinates to socialBlockers so:
-          // 1. Future icons don't overlap this one
-          // 2. Random walls don't spawn here
-          // 3. The A* algorithm knows to avoid this spot
-          // *Note: We do NOT add to randomWalls, so they won't render as gray blocks*
           socialBlockers.push([x, y] as Wall);
           socialBlockers.push([x + 1, y] as Wall);
           socialBlockers.push([x, y + 1] as Wall);
@@ -310,12 +312,21 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
 
     setPhase('SEARCHING');
 
-  }, [phase, grid, isResizing]);
+  }, [phase, grid, isResizing, searchAlgorithm, debug]);
 
   // SEARCHING - animate search nodes one by one
   useEffect(() => {
     if (phase !== 'SEARCHING') return;
     if (isResizing) return;
+
+    // Guard Clause for Race Condition
+    // If refs are empty but phase is SEARCHING, abort to avoid freeze/crash
+    if (!allSearchStepsRef.current || allSearchStepsRef.current.length === 0) {
+      if (debug) console.warn('⚠️ Search steps lost during animation. Resetting...');
+      setPhase('SETUP');
+      hasStartedRef.current = false;
+      return;
+    }
     
     if (currentSearchIndex >= allSearchStepsRef.current.length) {
       setPhase('PATH');
@@ -323,19 +334,29 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
     }
     
     const nextNode = allSearchStepsRef.current[currentSearchIndex];
-    setSearchedNodes(prev => [...prev, nextNode]);
+    
+    // Safety check ensuring node exists
+    if (nextNode) {
+      setSearchedNodes(prev => [...prev, nextNode]);
+    }
     
     const timer = setTimeout(() => {
       setCurrentSearchIndex(prev => prev + 1);
     }, searchSpeed);
     
     return () => clearTimeout(timer);
-  }, [phase, currentSearchIndex, searchSpeed, isResizing]);
+  }, [phase, currentSearchIndex, searchSpeed, isResizing, debug]);
 
   // PATH - animate path nodes one by one
   useEffect(() => {
     if (phase !== 'PATH') return;
     if (isResizing) return;
+
+    // Safety Guard for Path as well
+    if (!allPathNodesRef.current || allPathNodesRef.current.length === 0) {
+        setPhase('PAUSE'); // Skip to pause if path data lost
+        return;
+    }
     
     if (currentPathIndex >= allPathNodesRef.current.length) {
       setPhase('PAUSE');
@@ -343,7 +364,11 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
     }
     
     const nextNode = allPathNodesRef.current[currentPathIndex];
-    setFinalPath(prev => [...prev, nextNode]);
+    
+    // Safety check
+    if (nextNode) {
+      setFinalPath(prev => [...prev, nextNode]);
+    }
     
     const timer = setTimeout(() => {
       setCurrentPathIndex(prev => prev + 1);
