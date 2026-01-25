@@ -3,11 +3,30 @@ import MockTerminal from './MockTerminal';
 import { AStarSearch } from '../../algorithms/search/index';
 import { calculateTerminalBounds } from './utils/terminalSizing';
 import type { Node, Grid, Wall } from '../../algorithms/search/types/index';
+import { Github, Linkedin, Mail, FileText, type LucideIcon } from 'lucide-react';
 import cx from 'classnames';
+
 interface LandingPageProps {
   debug?: boolean;
   searchAlgorithm?: typeof AStarSearch;
 }
+
+interface SocialNode {
+  id: string;
+  x: number;
+  y: number;
+  icon: LucideIcon;
+  url: string;
+  label: string;
+}
+
+// Configuration for your social links
+const SOCIAL_LINKS = [
+  { id: 'github', icon: Github, url: 'https://github.com/MrT3313', label: 'GitHub' },
+  { id: 'linkedin', icon: Linkedin, url: 'https://www.linkedin.com/in/reedturgeon/', label: 'LinkedIn' },
+  { id: 'email', icon: Mail, url: 'mailto:rturgeon@iu.edu', label: 'Email' },
+  // { id: 'resume', icon: FileText, url: '/resume.pdf', label: 'Resume' },
+];
 
 export default function LandingPage({ debug = false, searchAlgorithm = AStarSearch }: LandingPageProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -15,8 +34,12 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
   const [cellWidth, setCellWidth] = useState(40);
   const [cellHeight, setCellHeight] = useState(40);
   const [grid, setGrid] = useState<Grid>({ cols: 0, rows: 0 });
+  
+  // State for grid items
   const [dynamicWalls, setDynamicWalls] = useState<Wall[]>([]);
+  const [socialNodes, setSocialNodes] = useState<SocialNode[]>([]);
   const [terminalBounds, setTerminalBounds] = useState({ x: 0, y: 0, width: 0, height: 0 });
+  
   const [startPoint, setStartPoint] = useState<Node | null>(null);
   const [endPoint, setEndPoint] = useState<Node | null>(null);
   const [searchedNodes, setSearchedNodes] = useState<Node[]>([]);
@@ -90,33 +113,29 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
       const heightChanged = Math.abs(height - initialDimensionsRef.current.height) > 5;
       
       if (widthChanged || heightChanged) {
-        // Clear existing timeout
         if (resizeTimeout) {
           clearTimeout(resizeTimeout);
         }
         
-        // Start pausing if not already
         if (!isResizing) {
           if (debug) console.log('🟠 RESIZE START - Dimensions changed');
           setIsResizing(true);
         }
         
-        // Set timeout to end resize (500ms after last resize event)
         resizeTimeout = setTimeout(() => {
           if (debug) console.log('🟠 RESIZE END - Resizing stopped');
           setIsResizing(false);
           
-          // Update dimensions
           const newDims = updateDimensions();
           if (newDims) {
             initialDimensionsRef.current = newDims;
           }
           
-          // Reset everything
           hasStartedRef.current = false;
           setPhase('SETUP');
           setSearchedNodes([]);
           setFinalPath([]);
+          setSocialNodes([]);
           setIsWiping(false);
           setCurrentSearchIndex(0);
           setCurrentPathIndex(0);
@@ -130,9 +149,7 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
     
     return () => {
       window.removeEventListener('resize', handleResize);
-      if (resizeTimeout) {
-        clearTimeout(resizeTimeout);
-      }
+      if (resizeTimeout) clearTimeout(resizeTimeout);
     };
   }, [isResizing]);
 
@@ -152,50 +169,110 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
     if (phase !== 'SETUP') return;
     if (grid.cols === 0 || grid.rows === 0) return;
     if (hasStartedRef.current) return;
-    if (isResizing) return; // Don't start if resizing
+    if (isResizing) return; 
     
     hasStartedRef.current = true;
     if (debug) console.log('🔵 SETUP: Generating grid...');
 
-    // Calculate terminal bounds FIRST, synchronously
+    // 1. Calculate terminal bounds
     const currentTerminalBounds = calculateTerminalBounds(grid, window.innerWidth);
-    
-    // Update terminal bounds state
     setTerminalBounds(currentTerminalBounds);
     
-    // Helper function using the CURRENT terminal bounds
+    // Helper to check if a specific cell is inside the terminal
     const isInCurrentTerminal = (x: number, y: number) => {
       return x >= currentTerminalBounds.x && x < currentTerminalBounds.x + currentTerminalBounds.width &&
              y >= currentTerminalBounds.y && y < currentTerminalBounds.y + currentTerminalBounds.height;
     };
+
+    // Helper to check if a 2x2 area is clear (not terminal, not wall)
+    const isAreaClear = (x: number, y: number, currentWalls: Wall[]) => {
+      // Check bounds
+      if (x + 1 >= grid.cols || y + 1 >= grid.rows) return false;
+      
+      const points = [
+        { x, y }, { x: x + 1, y }, 
+        { x, y: y + 1 }, { x: x + 1, y: y + 1 }
+      ];
+
+      return points.every(p => 
+        !isInCurrentTerminal(p.x, p.y) && 
+        !isWall(p.x, p.y, currentWalls)
+      );
+    };
     
-    const getRandomPointInCurrentGrid = (walls: Wall[]) => {
+    const randomWalls: Wall[] = [];
+    const socialBlockers: Wall[] = []; // These are walls ONLY for pathfinding, not for rendering
+    const placedSocialNodes: SocialNode[] = [];
+
+    // 2. Place Social Icons First
+    SOCIAL_LINKS.forEach(link => {
+      let attempts = 0;
+      let placed = false;
+      
+      while (!placed && attempts < 500) {
+        // Random position (ensure room for 2x2)
+        const x = Math.floor(Math.random() * (grid.cols - 1));
+        const y = Math.floor(Math.random() * (grid.rows - 1));
+        
+        // We check against 'randomWalls' (empty now) and 'socialBlockers'
+        if (isAreaClear(x, y, [...randomWalls, ...socialBlockers])) {
+          // Place the node
+          placedSocialNodes.push({
+            ...link,
+            x,
+            y
+          });
+          
+          // Add these coordinates to socialBlockers so:
+          // 1. Future icons don't overlap this one
+          // 2. Random walls don't spawn here
+          // 3. The A* algorithm knows to avoid this spot
+          // *Note: We do NOT add to randomWalls, so they won't render as gray blocks*
+          socialBlockers.push([x, y] as Wall);
+          socialBlockers.push([x + 1, y] as Wall);
+          socialBlockers.push([x, y + 1] as Wall);
+          socialBlockers.push([x + 1, y + 1] as Wall);
+          
+          placed = true;
+        }
+        attempts++;
+      }
+    });
+
+    setSocialNodes(placedSocialNodes);
+
+    // 3. Fill remaining space with random walls
+    const totalCells = grid.cols * grid.rows;
+    const terminalCells = currentTerminalBounds.width * currentTerminalBounds.height;
+    const socialCells = placedSocialNodes.length * 4; 
+    
+    const availableCells = totalCells - terminalCells - socialCells;
+    const numRandomWalls = Math.floor(availableCells * 0.30);
+    
+    const getRandomPointInCurrentGrid = (existingObstacles: Wall[]) => {
       let x, y;
       let attempts = 0;
       do {
         x = Math.floor(Math.random() * grid.cols);
         y = Math.floor(Math.random() * grid.rows);
         attempts++;
-      } while ((isInCurrentTerminal(x, y) || isWall(x, y, walls)) && attempts < 1000);
+      } while ((isInCurrentTerminal(x, y) || isWall(x, y, existingObstacles)) && attempts < 1000);
       return { x, y };
     };
 
-    const newWalls: Wall[] = [];
-    const totalCells = grid.cols * grid.rows;
-    const terminalCells = currentTerminalBounds.width * currentTerminalBounds.height;
-    const availableCells = totalCells - terminalCells;
-    const numWalls = Math.floor(availableCells * 0.35);
-    
-    for (let i = 0; i < numWalls; i++) {
-      const point = getRandomPointInCurrentGrid(newWalls);
-      newWalls.push([point.x, point.y] as Wall);
+    // We generate walls, ensuring they don't hit socialBlockers
+    for (let i = 0; i < numRandomWalls; i++) {
+      const point = getRandomPointInCurrentGrid([...randomWalls, ...socialBlockers]);
+      randomWalls.push([point.x, point.y] as Wall);
     }
     
-    setDynamicWalls(newWalls);
+    // Only set the random walls to state (these are the ones that will render gray)
+    setDynamicWalls(randomWalls);
     
-    // Get start and end points that are NOT on walls
-    const start = getRandomPointInCurrentGrid(newWalls);
-    const end = getRandomPointInCurrentGrid(newWalls);
+    // 4. Place Start and End points (avoiding all obstacles)
+    const allObstacles = [...randomWalls, ...socialBlockers];
+    const start = getRandomPointInCurrentGrid(allObstacles);
+    const end = getRandomPointInCurrentGrid(allObstacles);
     
     setStartPoint(start);
     setEndPoint(end);
@@ -205,27 +282,16 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
     setCurrentSearchIndex(0);
     setCurrentPathIndex(0);
 
-    const wallSet: Wall[] = [...newWalls, ...Array.from({ length: currentTerminalBounds.height }, (_, i) => 
+    // 5. Run Search
+    // Combine ALL obstacles: random walls + icon hidden walls + terminal walls
+    const fullWallSetForSearch: Wall[] = [...allObstacles, ...Array.from({ length: currentTerminalBounds.height }, (_, i) => 
       Array.from({ length: currentTerminalBounds.width }, (_, j) => 
         [currentTerminalBounds.x + j, currentTerminalBounds.y + i] as Wall
       )
     ).flat()];
     
-    if (debug) {
-      console.log('Grid:', grid.cols, 'x', grid.rows);
-      console.log('Start:', start);
-      console.log('End:', end);
-      console.log('Walls:', newWalls.length, 'random walls +', currentTerminalBounds.width * currentTerminalBounds.height, 'terminal cells =', wallSet.length, 'total walls');
-    }
-    
-    const pathFinder = new searchAlgorithm(grid, wallSet);
+    const pathFinder = new searchAlgorithm(grid, fullWallSetForSearch);
     const result = pathFinder.findPath(start, end, grid.cols, grid.rows);
-    
-    if (debug) {
-      console.log('Result:', result);
-      console.log('Path length:', result.path.length);
-      console.log('Search steps:', result.searchSteps.length);
-    }
     
     if (result.path.length === 0) {
       if (debug) console.log('❌ No path found, retrying...');
@@ -237,12 +303,11 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
       return;
     }
 
-    if (debug) console.log('✅ Path found! Search steps:', result.searchSteps.length, 'Path nodes:', result.path.length);
+    if (debug) console.log('✅ Path found!');
     
     allSearchStepsRef.current = result.searchSteps;
     allPathNodesRef.current = result.path;
 
-    if (debug) console.log('🟢 Immediately changing to SEARCHING phase');
     setPhase('SEARCHING');
 
   }, [phase, grid, isResizing]);
@@ -250,21 +315,16 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
   // SEARCHING - animate search nodes one by one
   useEffect(() => {
     if (phase !== 'SEARCHING') return;
-    if (isResizing) return; // Pause during resize
-    
-    if (debug) console.log('📊 SEARCHING - showing node', currentSearchIndex, 'of', allSearchStepsRef.current.length);
+    if (isResizing) return;
     
     if (currentSearchIndex >= allSearchStepsRef.current.length) {
-      if (debug) console.log('🟡 Search complete! Moving to PATH phase');
       setPhase('PATH');
       return;
     }
     
-    // Add the next searched node
     const nextNode = allSearchStepsRef.current[currentSearchIndex];
     setSearchedNodes(prev => [...prev, nextNode]);
     
-    // Schedule next node
     const timer = setTimeout(() => {
       setCurrentSearchIndex(prev => prev + 1);
     }, searchSpeed);
@@ -275,21 +335,16 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
   // PATH - animate path nodes one by one
   useEffect(() => {
     if (phase !== 'PATH') return;
-    if (isResizing) return; // Pause during resize
-    
-    if (debug) console.log('📈 PATH - showing node', currentPathIndex, 'of', allPathNodesRef.current.length);
+    if (isResizing) return;
     
     if (currentPathIndex >= allPathNodesRef.current.length) {
-      if (debug) console.log('🟣 Path complete! Moving to PAUSE');
       setPhase('PAUSE');
       return;
     }
     
-    // Add the next path node
     const nextNode = allPathNodesRef.current[currentPathIndex];
     setFinalPath(prev => [...prev, nextNode]);
     
-    // Schedule next node
     const timer = setTimeout(() => {
       setCurrentPathIndex(prev => prev + 1);
     }, pathSpeed);
@@ -300,12 +355,9 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
   // PAUSE - show complete result
   useEffect(() => {
     if (phase !== 'PAUSE') return;
-    if (isResizing) return; // Pause during resize
-    
-    if (debug) console.log('⏸️  PAUSE - Showing complete path for 2 seconds');
+    if (isResizing) return;
     
     const timer = setTimeout(() => {
-      if (debug) console.log('🔴 WIPE - Starting transition');
       setPhase('WIPE');
       setIsWiping(true);
     }, 2000);
@@ -316,12 +368,9 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
   // WIPE - clear and restart
   useEffect(() => {
     if (phase !== 'WIPE') return;
-    if (isResizing) return; // Pause during resize
-    
-    if (debug) console.log('💫 WIPE - Clearing screen');
+    if (isResizing) return;
     
     const timer = setTimeout(() => {
-      if (debug) console.log('🔄 RESTART - Going back to SETUP');
       hasStartedRef.current = false;
       setPhase('SETUP');
     }, 800);
@@ -360,9 +409,7 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
       if (window.scrollY > 50) return;
       
       if (e.deltaY > 0) {
-        if (wheelTimeout) {
-          clearTimeout(wheelTimeout);
-        }
+        if (wheelTimeout) clearTimeout(wheelTimeout);
         
         wheelTimeout = setTimeout(() => {
           scrollToEducationPath();
@@ -374,12 +421,8 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
     
     return () => {
       window.removeEventListener('wheel', handleWheel);
-      if (wheelTimeout) {
-        clearTimeout(wheelTimeout);
-      }
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-      }
+      if (wheelTimeout) clearTimeout(wheelTimeout);
+      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
     };
   }, []);
 
@@ -413,7 +456,7 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
           </defs>
           <rect width="100%" height="100%" fill="url(#grid)" />
           
-          {/* Walls - Grey with no borders, only background grid visible */}
+          {/* Walls - ONLY rendering the random walls, not social blockers */}
           {dynamicWalls.map(([x, y], idx) => (
             <rect
               key={`wall-${idx}`}
@@ -427,7 +470,51 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
             />
           ))}
           
-          {/* Searched nodes - with fade animation */}
+          {/* Social Icons - Rendered over the grid */}
+          {socialNodes.map((node) => {
+            const Icon = node.icon;
+            return (
+              <foreignObject
+                key={node.id}
+                x={node.x * cellWidth}
+                y={node.y * cellHeight}
+                width={cellWidth * 2}
+                height={cellHeight * 2}
+                className="transition-all duration-300"
+                style={{ 
+                  opacity: isWiping ? 0 : 1,
+                  pointerEvents: isWiping ? 'none' : 'all',
+                  borderRadius: '5px'
+                }}
+              >
+                <div 
+                  onClick={() => window.open(node.url, '_blank')}
+                  className="w-full h-full flex items-center justify-center cursor-pointer group relative"
+                >
+                  {/* Solid Black Backdrop: Covers grid lines, no border */}
+                  <div className={cx(
+                    "absolute", 
+                    "inset-0", 
+                    "bg-[#fff]/70", 
+                    "rounded-sm")} 
+                  />
+                  
+                  {/* The Icon */}
+                  <Icon 
+                    className="relative z-10 w-8 h-8 text-black group-hover:scale-110 transition-all duration-200" 
+                    strokeWidth={1.5}
+                  />
+                  
+                  {/* Tooltip Label */}
+                  <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-[10px] text-white opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap bg-black/90 px-2 py-1 rounded">
+                    {node.label}
+                  </div>
+                </div>
+              </foreignObject>
+            );
+          })}
+
+          {/* Searched nodes */}
           {searchedNodes.map((node, idx) => {
             const isStart = startPoint && node.x === startPoint.x && node.y === startPoint.y;
             const isEnd = endPoint && node.x === endPoint.x && node.y === endPoint.y;
@@ -481,7 +568,7 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
             </g>
           )}
           
-          {/* Final path - pulsing gold cells */}
+          {/* Final path */}
           {finalPath.map((node, idx) => {
             const isStart = startPoint && node.x === startPoint.x && node.y === startPoint.y;
             const isEnd = endPoint && node.x === endPoint.x && node.y === endPoint.y;
@@ -526,8 +613,8 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
           style={{ cursor: 'pointer', pointerEvents: 'auto' }}
         >
           <svg 
-            width="45" 
-            height="45" 
+            width={45} 
+            height={45} 
             viewBox="0 0 24 24" 
             fill="none" 
             stroke="white" 
