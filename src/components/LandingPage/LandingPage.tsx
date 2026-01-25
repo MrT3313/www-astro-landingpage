@@ -143,24 +143,8 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
     }
   }, [grid]);
 
-  const isInTerminal = (x: number, y: number) => {
-    return x >= terminalBounds.x && x < terminalBounds.x + terminalBounds.width &&
-           y >= terminalBounds.y && y < terminalBounds.y + terminalBounds.height;
-  };
-
   const isWall = (x: number, y: number, walls: Wall[]) => {
     return walls.some(([wx, wy]: Wall) => wx === x && wy === y);
-  };
-
-  const getRandomPoint = (walls: Wall[]) => {
-    let x, y;
-    let attempts = 0;
-    do {
-      x = Math.floor(Math.random() * grid.cols);
-      y = Math.floor(Math.random() * grid.rows);
-      attempts++;
-    } while ((isInTerminal(x, y) || isWall(x, y, walls)) && attempts < 1000);
-    return { x, y };
   };
 
   // SETUP - only runs once when grid is ready
@@ -368,29 +352,6 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
     }, 1000);
   };
 
-  const scrollToEmploymentPath = () => {
-    if (isScrollingRef.current) return;
-    
-    const educationPathContainer = document.getElementById('education-path-container');
-    if (!educationPathContainer) return;
-    
-    isScrollingRef.current = true;
-    const rect = educationPathContainer.getBoundingClientRect();
-    const targetScrollY = rect.top + window.scrollY;
-    
-    window.scrollTo({
-      top: targetScrollY,
-      behavior: 'smooth'
-    });
-    
-    if (scrollTimeoutRef.current) {
-      clearTimeout(scrollTimeoutRef.current);
-    }
-    scrollTimeoutRef.current = setTimeout(() => {
-      isScrollingRef.current = false;
-    }, 1000);
-  };
-
   useEffect(() => {
     let wheelTimeout: ReturnType<typeof setTimeout> | null = null;
     
@@ -558,13 +519,10 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
         cellHeight={cellHeight} 
       />
 
-      {/* <div className="absolute inset-0 pointer-events-none z-20 opacity-5"
-           style={{ background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(34, 197, 94, 0.1) 2px, rgba(34, 197, 94, 0.1) 4px)' }} /> */}
-
       <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-30">
         <div 
           className="scroll-indicator"
-          onClick={scrollToEmploymentPath}
+          onClick={scrollToEducationPath}
           style={{ cursor: 'pointer', pointerEvents: 'auto' }}
         >
           <svg 
