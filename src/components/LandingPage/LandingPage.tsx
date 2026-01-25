@@ -24,7 +24,7 @@ interface SocialNode {
 const SOCIAL_LINKS = [
   { id: 'github', icon: Github, url: 'https://github.com/MrT3313', label: 'GitHub' },
   { id: 'linkedin', icon: Linkedin, url: 'https://www.linkedin.com/in/reedturgeon/', label: 'LinkedIn' },
-  { id: 'email', icon: Mail, url: 'mailto:rturgeon@iu.edu', label: 'Email' },
+  { id: 'email', icon: Mail, url: 'mailto:rturgeon@iu.edu', label: 'rturgeon@iu.edu' },
   // { id: 'resume', icon: FileText, url: '/resume.pdf', label: 'Resume' },
 ];
 
@@ -484,12 +484,14 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
                 style={{ 
                   opacity: isWiping ? 0 : 1,
                   pointerEvents: isWiping ? 'none' : 'all',
-                  borderRadius: '5px'
+                  borderRadius: '5px',
+                  overflow: 'visible'
                 }}
               >
                 <div 
                   onClick={() => window.open(node.url, '_blank')}
                   className="w-full h-full flex items-center justify-center cursor-pointer group relative"
+                  style={{ overflow: 'visible' }}
                 >
                   {/* Solid Black Backdrop: Covers grid lines, no border */}
                   <div className={cx(
@@ -506,7 +508,7 @@ export default function LandingPage({ debug = false, searchAlgorithm = AStarSear
                   />
                   
                   {/* Tooltip Label */}
-                  <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-[10px] text-white opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap bg-black/90 px-2 py-1 rounded">
+                  <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap bg-black px-2.5 py-1.5 rounded shadow-lg z-50">
                     {node.label}
                   </div>
                 </div>
